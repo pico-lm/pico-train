@@ -1,12 +1,12 @@
-# Pico: Tiny Language Models for Learning Dynamics Research
+# Pico - Training Framework
 
-> 🚧 **Coming Soon!** Our complete suite of pre-trained models (1M to 1B parameters) is currently being trained and will be released on [HuggingFace organization](https://huggingface.co/pico-lm) in January 2025.
+> Our complete suite of pre-trained models (1M to 500M parameters) are available on [HuggingFace](https://huggingface.co/pico-lm).
 
-Pico is a framework designed to facilitate research into language model learning dynamics through a comprehensive suite of small to medium-scale models (1M-1B parameters). Built on a LLAMA-style architecture, Pico emphasizes simplicity, modularity, and research accessibility.
+Pico is a framework designed to facilitate research into language model learning dynamics through a comprehensive suite of tiny to medium-scale models (1M-500M parameters). 
 
-The framework serves two key purposes:
-1. **Pre-trained Model Suite**: Access our complete suite of models trained on 420B tokens
-2. **Training Framework**: Easily train your own model suite from scratch with minimal setup
+Pico consists of two components:
+1. **Pico Training Framework**: The codebase you are currently viewing
+2. **Pico Analysis Framework**: Easily train your own model suite from scratch with minimal setup
 
 This dual-purpose design means researchers can either:
 - Use our pre-trained models and checkpoints for immediate analysis
@@ -23,8 +23,8 @@ All models in a Pico suite (whether our pre-trained ones or your custom trained 
 ## 📦 Resources
 
 All our pre-trained models and datasets are publicly available through our [HuggingFace organization](https://huggingface.co/pico-lm):
-- Pre-trained models (1M to 1B parameters)
-- Pre-tokenized training data derived from the DOLMA corpus
+- Pre-trained models (1M to 500M parameters)
+- Pre-tokenized training data (420B tokens) derived from the DOLMA corpus
 - Training checkpoints with activation and gradient information
 - Basic evaluation (perplexity) metrics logged throughout training
 
@@ -32,7 +32,7 @@ All our pre-trained models and datasets are publicly available through our [Hugg
 
 Unlike other model suites, Pico is specifically designed for learning dynamics research:
 
-1. **Focused Scale Range**: Covers the critical 1M-1B parameter range where most learning dynamics research is feasible
+1. **Focused Scale Range**: Covers the critical 1M-500M parameter range where most learning dynamics research is feasible
 2. **Consistent Training**: All models see identical data in identical order, enabling true cross-scale comparisons
 3. **Rich Analytics**: Automatic saving of activations and gradients for mechanistic interpretability
 4. **Research Ready**: Minimal, well-documented code designed to be forked and modified
@@ -59,7 +59,7 @@ Unlike other model suites, Pico is specifically designed for learning dynamics r
 
 1. **Clone Project**
 ```bash
-git clone https://github.com/rdiehlmartinez/pico.git && cd pico
+git clone https://github.com/pico-lm/pico.git && cd pico
 ```
 
 2. **Configure Environment**
@@ -148,8 +148,8 @@ Apache 2.0 License
 
 ## 📫 Contact
 
-- GitHub: [rdiehlmartinez/pico](https://github.com/rdiehlmartinez/pico)
-- Author: [Richard Diehl Martinez](https://richarddiehlmartinez.com)
+- Email: [richard@picolm.io](richard@picolm.io)
+- Website: [picolm.io](https://www.picolm.io)
 
 ## Citation
 
