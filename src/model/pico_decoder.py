@@ -1,7 +1,7 @@
 """
-The Pico Model: A Lightweight Transformer Language Model
+Pico Decoder: A Lightweight Causal Transformer Language Model
 
-Pico uses a simple LLAMA-style transformer architecture, written for clarity and educational purposes.
+Pico Decoder uses a simple LLAMA-style transformer architecture, written for clarity and educational purposes.
 
 Everything is written with a modular design for easy modification and experimentation.
 
@@ -66,7 +66,7 @@ class RMSNorm(torch.nn.Module):
         https://arxiv.org/abs/1910.07467
     """
 
-    def __init__(self, config: Union["ModelConfig", "PicoHFConfig"]):
+    def __init__(self, config: Union["ModelConfig", "PicoDecoderHFConfig"]):
         super().__init__()
         self.eps = config.norm_eps
         self.weight = nn.Parameter(torch.ones(config.d_model))
@@ -112,7 +112,7 @@ class RoPE(nn.Module):
 
     _freqs_cis_tensor: torch.Tensor | None = None
 
-    def __init__(self, config: Union["ModelConfig", "PicoHFConfig"]):
+    def __init__(self, config: Union["ModelConfig", "PicoDecoderHFConfig"]):
         super().__init__()
 
         self.theta = config.position_emb_theta
@@ -222,7 +222,7 @@ class Attention(nn.Module):
 
     def __init__(
         self,
-        config: Union["ModelConfig", "PicoHFConfig"],
+        config: Union["ModelConfig", "PicoDecoderHFConfig"],
     ):
         super().__init__()
 
@@ -341,7 +341,7 @@ class SwiGLU(nn.Module):
     serving as the feed-forward network in transformer blocks.
 
     Args:
-        config (Union[ModelConfig, PicoHFConfig]): Configuration containing:
+        config (Union[ModelConfig, PicoDecoderHFConfig]): Configuration containing:
             - config.d_model: Model dimension
             - config.activation_hidden_dim: Hidden dimension (typically 4 * d_model)
 
@@ -349,7 +349,7 @@ class SwiGLU(nn.Module):
         https://arxiv.org/abs/2002.05202
     """
 
-    def __init__(self, config: Union["ModelConfig", "PicoHFConfig"]):
+    def __init__(self, config: Union["ModelConfig", "PicoDecoderHFConfig"]):
         super().__init__()
 
         model_dim = config.d_model
@@ -365,12 +365,12 @@ class SwiGLU(nn.Module):
 
 ########################################################
 #
-# PicoBlock and the Pico Model
+# PicoDecoderBlock
 #
 ########################################################
 
 
-class PicoBlock(nn.Module):
+class PicoDecoderBlock(nn.Module):
     """Single Transformer Block with Attention and Feed-forward layers.
 
     Implements a standard transformer block with:
@@ -378,13 +378,13 @@ class PicoBlock(nn.Module):
     - SwiGLU feed-forward network with normalization and residual connection
 
     Args:
-        config (Union[ModelConfig, PicoHFConfig]): Model configuration; either a dataclass or
-            a HuggingFace PicoHFConfig
+        config (Union[ModelConfig, PicoDecoderHFConfig]): Model configuration; either a dataclass or
+            a HuggingFace PicoDecoderHFConfig
     """
 
     def __init__(
         self,
-        config: Union["ModelConfig", "PicoHFConfig"],
+        config: Union["ModelConfig", "PicoDecoderHFConfig"],
     ):
         super().__init__()
 
@@ -415,44 +415,45 @@ class PicoBlock(nn.Module):
 
 ########################################################
 #
-# Pico Model
+# Pico Decoder (Causal Transformer Model)
 #
 ########################################################
 
 
-class Pico(nn.Module):
+class PicoDecoder(nn.Module):
     """
-    Core Pico model: combines the embedding, Pico layers, and output projection into a single model.
+    Pico Decoder: combines the embedding, causal decoder blocks, and output projection into a
+    single autoregressive model.
 
     For more information on the model, see the classes for the modules that make up the model.
     """
 
     def __init__(
         self,
-        model_config: Union["ModelConfig", "PicoHFConfig"],
+        model_config: Union["ModelConfig", "PicoDecoderHFConfig"],
     ):
         super().__init__()
         self.config = model_config
 
         self.embedding_proj = nn.Embedding(self.config.vocab_size, self.config.d_model)
         self.layers = nn.ModuleList(
-            [PicoBlock(self.config) for _ in range(self.config.n_layers)]
+            [PicoDecoderBlock(self.config) for _ in range(self.config.n_layers)]
         )
         self.output_norm = RMSNorm(self.config)
         self.de_embedding_proj = nn.Linear(
             self.config.d_model, self.config.vocab_size, bias=False
         )
 
-    def convert_to_hf_model(self) -> "PicoHF":
+    def convert_to_hf_model(self) -> "PicoDecoderHF":
         """Convert the Lightning model to a HuggingFace model."""
         # Create HF config without fabric-specific settings
-        hf_config = PicoHFConfig.from_dataclass(self.config)
+        hf_config = PicoDecoderHFConfig.from_dataclass(self.config)
 
         # Create new HF model
-        hf_model = PicoHF(hf_config)
+        hf_model = PicoDecoderHF(hf_config)
 
         # Copy state dict, excluding fabric-specific keys
-        hf_model.load_state_dict(self.state_dict(prefix="pico."))
+        hf_model.load_state_dict(self.state_dict(prefix="pico_decoder."))
 
         return hf_model
 
@@ -531,7 +532,7 @@ class Pico(nn.Module):
 """
 HuggingFace wrapper for the Pico model.
 
-Wait why do we need a wrapper? Aren't we just using the Pico class directly? Good question!
+Why do we need a wrapper? Good question!
 
 Many evaluation frameworks require a model be setup as a HuggingFace model, so we provide a simple
 wrapper that does just that. When we save checkpoints of the Pico model, we save both the normal
@@ -543,13 +544,13 @@ This also lets you do cool things like:
 """
 
 
-class PicoHFConfig(PretrainedConfig):
+class PicoDecoderHFConfig(PretrainedConfig):
     """HuggingFace config for Pico model."""
 
-    model_type = "pico"
+    model_type = "pico_decoder"
 
     @classmethod
-    def from_dict(cls, config_dict: Dict[str, Any], **kwargs) -> "PicoHFConfig":
+    def from_dict(cls, config_dict: Dict[str, Any], **kwargs) -> "PicoDecoderHFConfig":
         # NOTE The typical from_dict method doesn't actually set the attributes unless they are
         # defined in the constructor.
 
@@ -574,15 +575,15 @@ class PicoHFConfig(PretrainedConfig):
         return cls.from_dict(asdict(model_config))
 
 
-class PicoHF(PreTrainedModel):
+class PicoDecoderHF(PreTrainedModel):
     """HuggingFace wrapper for Pico model."""
 
-    config_class = PicoHFConfig
+    config_class = PicoDecoderHFConfig
     _no_split_modules = ["PicoBlock", "Attention", "SwiGLU", "RMSNorm"]
 
-    def __init__(self, config: PicoHFConfig):
+    def __init__(self, config: PicoDecoderHFConfig):
         super().__init__(config)
-        self.pico = Pico(config)
+        self.pico_decoder = PicoDecoder(config)
 
     def forward(
         self,
@@ -609,6 +610,6 @@ class PicoHF(PreTrainedModel):
 
 
 # Register for auto classes
-PicoHFConfig.register_for_auto_class()
-PicoHF.register_for_auto_class("AutoModel")
-PicoHF.register_for_auto_class("AutoModelForCausalLM")
+PicoDecoderHFConfig.register_for_auto_class()
+PicoDecoderHF.register_for_auto_class("AutoModel")
+PicoDecoderHF.register_for_auto_class("AutoModelForCausalLM")

@@ -12,6 +12,10 @@ from ._constants import VOCAB_SIZE, BATCH_SIZE, MAX_SEQ_LEN
 
 @dataclass
 class ModelConfig:
+    model_type: str = "pico_decoder"
+
+    # Pico Decoder Defaults
+
     d_model: int = 768
     n_layers: int = 12
 

@@ -14,8 +14,7 @@ from huggingface_hub import upload_folder
 
 import deepspeed
 
-from src.model import Pico
-
+from src.training.utils.initialization import initialize_model
 from src.training.utils.io import use_backoff
 
 # typing imports
@@ -285,7 +284,7 @@ def compute_learning_dynamics_states(
     )
 
     # Create a new model instance with same parameters but zero gradients
-    _model = Pico(model.config)
+    _model = initialize_model(model.config)
     _model.load_state_dict(model.state_dict())
 
     if isinstance(fabric.strategy, DeepSpeedStrategy):

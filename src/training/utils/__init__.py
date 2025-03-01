@@ -16,4 +16,5 @@ from .initialization import (
     initialize_experiment_tracker,
     initialize_logging,
     initialize_optimizer,
+    initialize_model,
 )
