@@ -414,12 +414,12 @@ def save_learning_dynamics_states(
         )
         learning_dynamics_dataset.save_to_disk(learning_dynamics_dataset_path)
 
-    if checkpointing_config.save_checkpoint_repo_id is not None:
+    if checkpointing_config.save_to_hf:
         # Upload the HF model
         upload_folder(
             folder_path=learning_dynamics_path,
             path_in_repo=learning_dynamics_dir,
-            repo_id=checkpointing_config.save_checkpoint_repo_id,
+            repo_id=checkpointing_config.hf_checkpoint.repo_id,
             commit_message=f"Saving Learning Dynamics Data ({prefix}) -- Step {checkpoint_step}",
             revision=checkpointing_config.run_name,
             token=os.getenv("HF_TOKEN"),

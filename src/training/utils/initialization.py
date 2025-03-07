@@ -164,7 +164,7 @@ def initialize_run_dir(checkpointing_config: CheckpointingConfig) -> str:
 
 
 def initialize_fabric(
-    training_config: TrainingConfig, experiment_tracker: Optional[FabricLogger] = None
+    training_config: TrainingConfig, wandb_logger: Optional[FabricLogger] = None
 ):
     """Initialize Lightning Fabric for distributed training.
 
@@ -174,8 +174,7 @@ def initialize_fabric(
     Args:
         training_config: Configuration object containing fabric settings
             (accelerator, precision, devices, etc.).
-        experiment_tracker: Optional logger instance for experiment tracking
-            (e.g., WandB logger).
+        wandb_logger: Optional weights and biases logger instance for experiment tracking
 
     Returns:
         L.Fabric: Initialized Lightning Fabric instance.
@@ -203,7 +202,7 @@ def initialize_fabric(
         precision=training_config.fabric.precision,
         devices=training_config.fabric.num_devices,
         num_nodes=training_config.fabric.num_nodes,
-        loggers=[experiment_tracker] if experiment_tracker is not None else None,
+        loggers=[wandb_logger] if wandb_logger is not None else None,
         strategy=strategy,
     )
 
@@ -530,13 +529,12 @@ def _initialize_log_file(checkpointing_config: CheckpointingConfig) -> str:
 
 
 @use_backoff()
-def initialize_experiment_tracker(
+def initialize_wandb(
     monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig
 ):
-    """Initialize an experiment tracker.
+    """Initialize Weights and Biases.
 
-    This function initializes an experiment tracker based on the configuration settings. Out of
-    the box, Pico supports Weights and Biases.
+    This function initializes Weights and Biases based on the configuration settings.
 
     Args:
         monitoring_config: Configuration object containing monitoring settings.
@@ -545,45 +543,35 @@ def initialize_experiment_tracker(
     Returns:
         Optional[WandbLogger]: An experiment tracker instance.
     """
-    # NOTE: Add whatever other experiment trackers here that you want to use here.
 
-    experiment_tracker = None
-    if monitoring_config.experiment_tracker.framework == "wandb":
-        assert (
-            monitoring_config.experiment_tracker.wandb_project is not None
-        ), "Wandb project must be provided if wandb is to be used."
-        assert (
-            monitoring_config.experiment_tracker.wandb_entity is not None
-        ), "Wandb entity must be provided if wandb is to be used."
+    assert (
+        monitoring_config.wandb.project is not None and monitoring_config.wandb.project != ""
+    ), "Wandb project must be provided if wandb is to be used."
+    assert (
+        monitoring_config.wandb.entity is not None and monitoring_config.wandb.entity != ""
+    ), "Wandb entity must be provided if wandb is to be used."
 
-        _run_id = None
-        if checkpointing_config.training.auto_resume:
-            # If we are loading a checkpoint, we can try to find the run id of the previous run
-            previous_runs = wandb.Api().runs(
-                path=f"{monitoring_config.experiment_tracker.wandb_entity}/{monitoring_config.experiment_tracker.wandb_project}",
-                filters={"display_name": checkpointing_config.run_name},
-            )
-            try:
-                if len(previous_runs) == 1:
-                    _run_id = previous_runs[0].id
-            except ValueError:
-                pass
-
-        experiment_tracker = WandbLogger(
-            project=monitoring_config.experiment_tracker.wandb_project,
-            entity=monitoring_config.experiment_tracker.wandb_entity,
-            id=_run_id,
-            name=checkpointing_config.run_name,
+    _run_id = None
+    if checkpointing_config.training.auto_resume:
+        # If we are loading a checkpoint, we can try to find the run id of the previous run
+        previous_runs = wandb.Api().runs(
+            path=f"{monitoring_config.wandb.entity}/{monitoring_config.wandb.project}",
+            filters={"display_name": checkpointing_config.run_name},
         )
-    elif (
-        monitoring_config.experiment_tracker.framework is not None
-        and monitoring_config.experiment_tracker.framework != ""
-    ):
-        raise ValueError(
-            f"Invalid experiment tracker: {monitoring_config.experiment_tracker.framework}"
-        )
+        try:
+            if len(previous_runs) == 1:
+                _run_id = previous_runs[0].id
+        except ValueError:
+            pass
 
-    return experiment_tracker
+    wandb_logger = WandbLogger(
+        project=monitoring_config.wandb.project,
+        entity=monitoring_config.wandb.entity,
+        id=_run_id,
+        name=checkpointing_config.run_name,
+    )
+
+    return wandb_logger
 
 
 def initialize_logging(
@@ -650,8 +638,9 @@ def initialize_hf_checkpointing(
     Creates a HuggingFace repository if it doesn't exist, and creates a branch named after the run.
 
     Args:
-        checkpointing_config: Configuration object containing checkpointing settings;
-            must have a 'save_checkpoint_repo_id' attribute.
+        checkpointing_config: Configuration object containing checkpointing settings; must have
+            a 'hf_checkpoint' attribute that specifies the HuggingFace repository id and
+            collection slug (if applicable) to save the checkpoint to.
 
     Raises:
         RuntimeError: If unable to create HuggingFace repository after multiple attempts.
@@ -660,20 +649,22 @@ def initialize_hf_checkpointing(
     if fabric.global_rank != 0:
         return
 
-    huggingface_repo_id = checkpointing_config.save_checkpoint_repo_id
-    assert huggingface_repo_id is not None, "save_checkpoint_repo_id must be provided."
+    huggingface_repo_id = checkpointing_config.hf_checkpoint.repo_id
+    assert (
+        huggingface_repo_id is not None and huggingface_repo_id != ""
+    ), "hf_checkpoint.repo_id must be provided."
 
     repo = create_repo(huggingface_repo_id, exist_ok=True)
 
     # can create a repo without a specified namespace (will default to username)
     # however the rest of the HF calls need the fully qualified name
     # this is returned by create repo, so we update the config for later calls
-    checkpointing_config.save_checkpoint_repo_id = repo.repo_id
+    checkpointing_config.hf_checkpoint.repo_id = repo.repo_id
     huggingface_repo_id = repo.repo_id
 
-    if checkpointing_config.hf_collection_slug:
+    if checkpointing_config.hf_checkpoint.collection_slug:
         add_collection_item(
-            checkpointing_config.hf_collection_slug,
+            checkpointing_config.hf_checkpoint.collection_slug,
             huggingface_repo_id,
             repo.repo_type,
             exists_ok=True,

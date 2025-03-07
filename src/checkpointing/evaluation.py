@@ -56,11 +56,11 @@ def save_evaluation_results(
     with open(curr_eval_results_path, "w") as f:
         json.dump(evaluation_results, f)
 
-    if checkpointing_config.save_checkpoint_repo_id is not None:
+    if checkpointing_config.save_to_hf:
         upload_folder(
             folder_path=eval_results_dir,
             path_in_repo=checkpointing_config.evaluation.eval_results_dir,
-            repo_id=checkpointing_config.save_checkpoint_repo_id,
+            repo_id=checkpointing_config.hf_checkpoint.repo_id,
             commit_message=f"Saving Evaluation Results -- Step {checkpoint_step}",
             revision=checkpointing_config.run_name,
             token=os.getenv("HF_TOKEN"),

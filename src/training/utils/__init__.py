@@ -13,7 +13,7 @@ from .initialization import (
     initialize_dataloader,
     initialize_lr_scheduler,
     initialize_hf_checkpointing,
-    initialize_experiment_tracker,
+    initialize_wandb,
     initialize_logging,
     initialize_optimizer,
     initialize_model,

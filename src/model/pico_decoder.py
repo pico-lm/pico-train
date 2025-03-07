@@ -525,14 +525,12 @@ class PicoDecoder(nn.Module):
 
 ########################################################
 #
-# PicoConfig and PicoForHF
+# HuggingFace Wrapper
 #
 ########################################################
 
 """
 HuggingFace wrapper for the Pico model.
-
-Why do we need a wrapper? Good question!
 
 Many evaluation frameworks require a model be setup as a HuggingFace model, so we provide a simple
 wrapper that does just that. When we save checkpoints of the Pico model, we save both the normal
@@ -597,7 +595,9 @@ class PicoDecoderHF(PreTrainedModel):
         Forwards pass for the HuggingFace version of the Pico Model. Basic wrapper around the
         Pico model's forward pass, and returns the output as a HuggingFace CausalLMOutput.
         """
-        logits, past_key_values = self.pico(input_ids, past_key_values, use_cache)
+        logits, past_key_values = self.pico_decoder(
+            input_ids, past_key_values, use_cache
+        )
         if use_cache:
             return CausalLMOutputWithPast(
                 logits=logits,

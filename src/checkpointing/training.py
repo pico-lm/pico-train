@@ -103,7 +103,7 @@ def save_checkpoint(
     optimizer: Optimizer,
     lr_scheduler: LRScheduler,
     tokenizer: PreTrainedTokenizerBase,
-    upload_logs: bool = True,
+    upload_logs: bool = False,
 ) -> None:
     """Save training checkpoint and associated states to disk and optionally to HuggingFace Hub.
 
@@ -128,9 +128,10 @@ def save_checkpoint(
             └── {checkpointing_config.checkpoints_dir}/
                 ├── step_{checkpoint_step}/
                 │   ├── config.json                    # HuggingFace model config
-                │   ├── pytorch_model.bin              # HuggingFace model weights
-                │   ├── vocab.json                     # Tokenizer vocab
-                │   ├── merges.txt                     # Tokenizer merges
+                │   ├── model.safetensors              # HuggingFace model weights
+                │   ├── pico_{model_type}.py           # HuggingFace custom model class
+                │   ├── tokenizer.json                 # Tokenizer vocab
+                │   ├── tokenizer_config.json          # Tokenizer config
                 │   └── {checkpointing_config.fabric_checkpoint_dir}/  # Fabric-specific files
                 │       └── checkpoint/                # Distributed model checkpoint files (if using DeepSpeed)
                 │           OR
@@ -145,7 +146,7 @@ def save_checkpoint(
         optimizer: The optimizer instance to save
         lr_scheduler: The learning rate scheduler to save
         tokenizer: The tokenizer to save
-        upload_logs: Whether to upload training logs to HF Hub (default: True)
+        upload_logs: Whether to upload training logs to HF Hub (default: False)
 
     """
 
@@ -233,10 +234,13 @@ def save_checkpoint(
 
     if fabric.global_rank == 0:
         # Push to HuggingFace Hub if configured
-        if checkpointing_config.save_checkpoint_repo_id is not None:
+
+        if checkpointing_config.save_to_hf:
+            repo_id = checkpointing_config.hf_checkpoint.repo_id
+
             # Upload the HF model
             hf_model.push_to_hub(
-                repo_id=checkpointing_config.save_checkpoint_repo_id,
+                repo_id=repo_id,
                 commit_message=f"Saving HF Model -- Step {checkpoint_step}",
                 revision=checkpointing_config.run_name,
                 token=os.getenv("HF_TOKEN"),
@@ -245,7 +249,7 @@ def save_checkpoint(
             if checkpoint_step == 0:
                 # Uploading Tokenizer during first step since it never changes
                 tokenizer.push_to_hub(
-                    repo_id=checkpointing_config.save_checkpoint_repo_id,
+                    repo_id=repo_id,
                     commit_message=f"Saving Tokenizer -- Step {checkpoint_step}",
                     revision=checkpointing_config.run_name,
                     token=os.getenv("HF_TOKEN"),
@@ -254,7 +258,7 @@ def save_checkpoint(
                 upload_file(
                     path_or_fileobj=config_path,
                     path_in_repo="training_config.yaml",
-                    repo_id=checkpointing_config.save_checkpoint_repo_id,
+                    repo_id=repo_id,
                     commit_message=f"Saving Training Config -- Step {checkpoint_step}",
                     revision=checkpointing_config.run_name,
                     token=os.getenv("HF_TOKEN"),
@@ -264,7 +268,7 @@ def save_checkpoint(
             upload_folder(
                 folder_path=fabric_checkpoint_path,
                 path_in_repo=fabric_checkpoint_dir,
-                repo_id=checkpointing_config.save_checkpoint_repo_id,
+                repo_id=repo_id,
                 commit_message=f"Saving Fabric Checkpoint -- Step {checkpoint_step}",
                 revision=checkpointing_config.run_name,
                 token=os.getenv("HF_TOKEN"),
@@ -276,7 +280,7 @@ def save_checkpoint(
                 upload_folder(
                     folder_path=logs_path,
                     path_in_repo=logs_dir,
-                    repo_id=checkpointing_config.save_checkpoint_repo_id,
+                    repo_id=repo_id,
                     commit_message=f"Saving Logs -- Step {checkpoint_step}",
                     revision=checkpointing_config.run_name,
                     token=os.getenv("HF_TOKEN"),

@@ -3,8 +3,10 @@
 # Refer to the config files in the configs/ directory to see all the available options
 
 checkpointing:
-  run_name: "pico-medium-1"
-  save_checkpoint_repo_id: "pico-lm/pico-medium"
+  run_name: "pico-decoder-medium-1"
+  save_to_hf: true
+  hf_checkpoint:
+    repo_id: "pico-lm/pico-decoder-medium"
 
   learning_dynamics:
     batch_size: 128
@@ -12,6 +14,12 @@ checkpointing:
 model:
     d_model: 768
     activation_hidden_dim: 3072
+
+monitoring:
+  save_to_wandb: true
+  wandb:
+    project: "pico-decoder"
+    entity: "pico-lm"
 
 training:
   optimization:

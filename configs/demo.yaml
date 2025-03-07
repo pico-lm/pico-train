@@ -7,10 +7,12 @@ data:
     batch_size: 32
   
 checkpointing:
-  run_name: "demo-1"
+  run_name: "pico-decoder-demo-1"
   save_every_n_steps: 50
 
-  save_checkpoint_repo_id: "pico-lm/demo"
+  save_to_hf: true
+  hf_checkpoint:
+    repo_id: "pico-lm/demo"
 
   learning_dynamics:
     batch_size: 16
@@ -24,6 +26,12 @@ evaluation:
     batch_size: 32
 
 monitoring:
+
+  save_to_wandb: true
+  wandb:
+    project: "pico-demo"
+    entity: "pico-lm"
+
   logging:
     log_every_n_steps: 10
 

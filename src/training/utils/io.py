@@ -2,7 +2,7 @@ import time
 from functools import wraps
 
 
-def use_backoff(max_retries=10, initial_delay=1, backoff_factor=2):
+def use_backoff(max_retries=2, initial_delay=1, backoff_factor=2):
     """
     Universal retry wrapper with exponential backoff for any function, but primarily for loading
     and storing HuggingFace datasets and objects.
