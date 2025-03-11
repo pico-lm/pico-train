@@ -24,5 +24,5 @@ class MonitoringConfig:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 
     # Weights and Biases
-    save_to_wandb: bool = True
+    save_to_wandb: bool = False
     wandb: WandbConfig = field(default_factory=WandbConfig)

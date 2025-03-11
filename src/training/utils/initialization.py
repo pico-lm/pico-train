@@ -545,10 +545,12 @@ def initialize_wandb(
     """
 
     assert (
-        monitoring_config.wandb.project is not None and monitoring_config.wandb.project != ""
+        monitoring_config.wandb.project is not None
+        and monitoring_config.wandb.project != ""
     ), "Wandb project must be provided if wandb is to be used."
     assert (
-        monitoring_config.wandb.entity is not None and monitoring_config.wandb.entity != ""
+        monitoring_config.wandb.entity is not None
+        and monitoring_config.wandb.entity != ""
     ), "Wandb entity must be provided if wandb is to be used."
 
     _run_id = None

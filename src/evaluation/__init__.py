@@ -78,23 +78,20 @@ def run_evaluation(
     # NOTE: Evaluation is only run on first processes to enable third-party evaluation libraries
     # to determine how to handle distributed evaluation.
     if fabric.global_rank == 0:
-        if checkpointing_config.evaluation.load_checkpoint_path is not None:
-            model_path = checkpointing_config.evaluation.load_checkpoint_path
-        else:
-            run_name = checkpointing_config.run_name
-            model_path = f"{os.getcwd()}/{checkpointing_config.runs_dir}/{run_name}/{checkpointing_config.checkpoints_dir}/latest"
+        run_name = checkpointing_config.run_name
+        model_path = f"{os.getcwd()}/{checkpointing_config.runs_dir}/{run_name}/{checkpointing_config.checkpoints_dir}/latest"
         os.makedirs(model_path, exist_ok=True)
 
         for metric in evaluation_config.metrics:
             # NOTE: add your own metrics here
             if metric == "paloma":
-                paloma_result = run_paloma_evaluation(
+                evaluation_result = run_paloma_evaluation(
                     model_path, evaluation_config.paloma
                 )
             else:
                 raise ValueError(f"Metric {metric} not supported")
 
-            evaluation_results[metric] = paloma_result
+            evaluation_results[metric] = evaluation_result
 
     torch.cuda.empty_cache()
 
