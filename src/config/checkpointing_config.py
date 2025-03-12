@@ -21,11 +21,13 @@ from ._constants import (
 
 @dataclass
 class TrainingCheckpointingConfig:
+    # Automatically resume training from the most recent checkpoint
     auto_resume: bool = True
 
 
 @dataclass
 class EvaluationCheckpointingConfig:
+    # Directory in which evaluation results are saved
     eval_results_dir: str = EVAL_RESULTS_DIR
 
 
@@ -64,9 +66,10 @@ class HuggingFaceCheckpointingConfig:
 
 @dataclass
 class CheckpointingConfig:
-    # Name of the run
+    # Assign a name to the run
     run_name: Optional[str] = None
 
+    # Defining checkpointing directories
     runs_dir: str = RUNS_DIR
     checkpoints_dir: str = CHECKPOINTS_DIR
     logs_dir: str = LOGS_DIR

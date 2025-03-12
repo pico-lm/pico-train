@@ -112,7 +112,7 @@ class Trainer:
             training_config=self.configs["training"], optimizer=self.optimizer
         )
 
-        # Wrap with Fabric
+        # Wrap model and optimizer with Fabric
         self.model, self.optimizer = self.fabric.setup(self.model, self.optimizer)
 
         # Setup HuggingFace Checkpointing
@@ -221,7 +221,7 @@ class Trainer:
                 self.learning_dynamics_eval_dataset = None
 
     def train(self) -> None:
-        """Execute the main training workflow.
+        """Execute the main training pipeline.
 
         This method orchestrates the complete training process by:
         1. Creating an initial checkpoint to save the starting state and evaluate the model as a

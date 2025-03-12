@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 A minimal script to train the Pico language model. In practice, you should just use the
-`poetry run train` command to run the training pipeline. Doing so will call on this script.
+`poetry run train` command to run the training pipeline. Doing so will invoke this script.
+Training logic is located in `src/training/trainer.py`.
 """
 
 import click

@@ -20,7 +20,7 @@ class PalomaEvaluationConfig:
 
 @dataclass
 class EvaluationConfig:
-    # Evaluation metrics to compute: by default, we compute the perplexity of the model
+    # Evaluation metrics to compute: by default, we compute the perplexity of the model on the paloma dataset
     metrics: Optional[List[str]] = field(default_factory=lambda: ["paloma"])
 
     # NOTE: Add other evaluation configs here

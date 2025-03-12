@@ -233,7 +233,7 @@ def save_checkpoint(
     ########################################################
 
     if fabric.global_rank == 0:
-        # Push to HuggingFace Hub if configured
+        # Push only on rank zero thread
 
         if checkpointing_config.save_to_hf:
             repo_id = checkpointing_config.hf_checkpoint.repo_id
@@ -255,6 +255,7 @@ def save_checkpoint(
                     token=os.getenv("HF_TOKEN"),
                 )
 
+                # Upload training config, also only in first step
                 upload_file(
                     path_or_fileobj=config_path,
                     path_in_repo="training_config.yaml",

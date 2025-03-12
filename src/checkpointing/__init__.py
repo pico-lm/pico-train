@@ -1,9 +1,9 @@
 """
 Pico Checkpointing Package
 
-We subdivide the checkpointing into training and evaluation, and learning_dynamics. Training
+We subdivide the checkpointing into training, evaluation, and learning_dynamics. Training
 checkpoints store the model, optimizer, and learning rate scheduler. Evaluation checkpoints store
-the evaluation results. Learning dynamics checkpoints store activations and gradients used for
+the evaluation results on the defined metrics. Learning dynamics checkpoints store activations and gradients used for
 learning dynamics analysis.
 """
 

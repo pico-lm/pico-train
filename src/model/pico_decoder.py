@@ -525,25 +525,13 @@ class PicoDecoder(nn.Module):
 
 ########################################################
 #
-# HuggingFace Wrapper
+# HuggingFace Wrapper for the Pico Decoder model.
 #
 ########################################################
 
-"""
-HuggingFace wrapper for the Pico model.
-
-Many evaluation frameworks require a model be setup as a HuggingFace model, so we provide a simple
-wrapper that does just that. When we save checkpoints of the Pico model, we save both the normal
-Pico model as well as the model wrapped in this HuggingFace class.
-
-This also lets you do cool things like: 
-
-`model = AutoModelForCausalLM.from_pretrained("path/to/checkpoint")`
-"""
-
 
 class PicoDecoderHFConfig(PretrainedConfig):
-    """HuggingFace config for Pico model."""
+    """Config class for the Pico Decoder HuggingFace wrapper."""
 
     model_type = "pico_decoder"
 
@@ -570,11 +558,22 @@ class PicoDecoderHFConfig(PretrainedConfig):
 
     @classmethod
     def from_dataclass(cls, model_config: "ModelConfig"):
+        """Initialise from our custom config dataclass."""
         return cls.from_dict(asdict(model_config))
 
 
 class PicoDecoderHF(PreTrainedModel):
-    """HuggingFace wrapper for Pico model."""
+    """
+    HuggingFace wrapper for the Pico model.
+
+    Many evaluation frameworks require a model be setup as a HuggingFace model, so we provide a simple
+    wrapper that does just that. When we save checkpoints of the Pico model, we save both the normal
+    Pico model as well as the model wrapped in this HuggingFace class.
+
+    This also lets you do cool things like:
+
+    `model = AutoModelForCausalLM.from_pretrained("path/to/checkpoint")`
+    """
 
     config_class = PicoDecoderHFConfig
     _no_split_modules = ["PicoBlock", "Attention", "SwiGLU", "RMSNorm"]

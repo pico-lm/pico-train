@@ -109,9 +109,9 @@ class CheckpointStateExtractor:
                 loss = F.cross_entropy(outputs, labels)
                 self.fabric.backward(loss, model=self.model)
 
-        # cleanup forward hooks - NOTE this is not strictly necessary, since self.model is a
-        # deepcopy of the original model; but it is good practice to remove the hooks after the
-        # forward pass is complete.
+        # cleanup forward hooks
+        # NOTE this is not strictly necessary, since self.model is a deepcopy of the original model
+        # but it is good practice to remove the hooks after the forward pass is complete.
         for hook in forward_hooks:
             hook.remove()
 
