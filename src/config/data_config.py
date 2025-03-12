@@ -6,7 +6,7 @@ Specifies the hyperparameters for the dataset, dataloader, and tokenizer.
 
 from dataclasses import dataclass, field
 
-from ._constants import VOCAB_SIZE, BATCH_SIZE
+from ._constants import BATCH_SIZE, VOCAB_SIZE
 
 
 @dataclass

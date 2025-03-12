@@ -6,26 +6,24 @@ We save the learning dynamics states in a subdirectory of the checkpointing dire
 
 import os
 import re
-import torch
-import torch.optim as optim
-from torch.nn import functional as F
-from torch.utils.data import DataLoader
-from huggingface_hub import upload_folder
+from typing import Dict, Optional
 
 import deepspeed
-
-from src.training.utils.initialization import initialize_model
-from src.training.utils.io import use_backoff
-
-# typing imports
+import torch
 import torch.nn as nn
-from typing import Dict, Optional
+import torch.optim as optim
 from datasets import Dataset
-from transformers import PreTrainedTokenizerBase
-from src.config import CheckpointingConfig
-from src.config.checkpointing_config import LearningDynamicsCheckpointingConfig
+from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
 from lightning.fabric.strategies import DeepSpeedStrategy
+from torch.nn import functional as F
+from torch.utils.data import DataLoader
+from transformers import PreTrainedTokenizerBase
+
+from src.config import CheckpointingConfig
+from src.config.checkpointing_config import LearningDynamicsCheckpointingConfig
+from src.training.utils.initialization import initialize_model
+from src.training.utils.io import use_backoff
 
 
 # NOTE: DeepSpeed requires a dummy optimizer to be passed in to the setup function

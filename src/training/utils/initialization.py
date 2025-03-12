@@ -9,37 +9,35 @@ As always, this code is meant to be basic. We hard-code the obvious defaults, an
 more experimental stuff to you.
 """
 
-import lightning as L
-import torch
-import os
 import logging
-import yaml
+import os
+import warnings
 from dataclasses import fields, is_dataclass
 from datetime import datetime
-import wandb
-from huggingface_hub import add_collection_item, create_repo, create_branch
-from wandb.integration.lightning.fabric import WandbLogger
-from datasets import load_dataset, Dataset, DownloadConfig
+from typing import Dict, Optional, Union
+
+import lightning as L
+import torch
+import yaml
+from datasets import Dataset, DownloadConfig, load_dataset
 from datasets import config as datasets_config
+from huggingface_hub import add_collection_item, create_branch, create_repo
+from lightning.fabric.loggers import Logger as FabricLogger
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
-from typing import Optional, Dict, Union
-import warnings
 
+import wandb
 from src.config import (
-    TrainingConfig,
-    DataConfig,
-    ModelConfig,
-    EvaluationConfig,
-    MonitoringConfig,
     CheckpointingConfig,
+    DataConfig,
+    EvaluationConfig,
+    ModelConfig,
+    MonitoringConfig,
+    TrainingConfig,
 )
-
 from src.model import PicoDecoder
-
-from lightning.fabric.loggers import Logger as FabricLogger
-
 from src.training.utils.io import use_backoff
+from wandb.integration.lightning.fabric import WandbLogger
 
 warnings.filterwarnings(
     "ignore",

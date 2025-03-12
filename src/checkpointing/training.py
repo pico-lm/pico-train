@@ -8,22 +8,21 @@ in a subdirectory. This is done to facilitate easier versioning of the HuggingFa
 """
 
 import os
-import yaml
-from huggingface_hub import upload_folder, upload_file
-from lightning.fabric.utilities.seed import _collect_rng_states, _set_rng_states
-from lightning.fabric.strategies import DeepSpeedStrategy
 from dataclasses import asdict
+from typing import Any, Dict, Tuple, Union
 
-from src.training.utils.io import use_backoff
-
-# typing imports
+import yaml
+from huggingface_hub import upload_file, upload_folder
+from lightning.fabric import Fabric
+from lightning.fabric.strategies import DeepSpeedStrategy
+from lightning.fabric.utilities.seed import _collect_rng_states, _set_rng_states
+from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
-from torch import nn
 from transformers import PreTrainedTokenizerBase
-from lightning.fabric import Fabric
+
 from src.config import CheckpointingConfig
-from typing import Dict, Any, Union, Tuple
+from src.training.utils.io import use_backoff
 
 
 @use_backoff()

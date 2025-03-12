@@ -11,7 +11,6 @@ import evaluate
 from datasets import load_dataset
 from datasets.utils.logging import disable_progress_bar, enable_progress_bar
 
-# typing imports
 from src.config.evaluation_config import PalomaEvaluationConfig
 
 

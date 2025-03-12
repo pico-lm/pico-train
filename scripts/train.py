@@ -5,8 +5,10 @@ A minimal script to train the Pico language model. In practice, you should just 
 Training logic is located in `src/training/trainer.py`.
 """
 
-import click
 from pathlib import Path
+
+import click
+
 from src.training.trainer import Trainer
 
 

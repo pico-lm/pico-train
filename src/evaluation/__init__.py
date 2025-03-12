@@ -15,13 +15,14 @@ libraries/frameworks.
 """
 
 import os
-import torch
-from .tasks.paloma import run_paloma_evaluation
 
-# typing imports
-from src.config import EvaluationConfig, CheckpointingConfig
+import torch
 from lightning.fabric import Fabric
 from torch import nn
+
+from src.config import CheckpointingConfig, EvaluationConfig
+
+from .tasks.paloma import run_paloma_evaluation
 
 
 def run_evaluation(

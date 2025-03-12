@@ -5,7 +5,7 @@ Specifies the hyperparameters for the evaluation process, i.e. what metrics to c
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
 
 from src.config._constants import MAX_SEQ_LEN
 

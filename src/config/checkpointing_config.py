@@ -6,16 +6,16 @@ the model and optimizer states, as well as the learning dynamics metrics.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
 
 from ._constants import (
-    RUNS_DIR,
     CHECKPOINTS_DIR,
-    LOGS_DIR,
+    EVAL_RESULTS_DIR,
     FABRIC_CHECKPOINT_DIR,
     FABRIC_CHECKPOINT_FILENAME,
-    EVAL_RESULTS_DIR,
     LEARNING_DYNAMICS_DIR,
+    LOGS_DIR,
+    RUNS_DIR,
 )
 
 

@@ -24,18 +24,15 @@ Adapted from:
     - LLAMA: https://github.com/meta/llama
 """
 
+from dataclasses import asdict
+from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.nn.attention import sdpa_kernel, SDPBackend
-
-from dataclasses import asdict
-
+from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers import PretrainedConfig, PreTrainedModel
-from transformers.modeling_outputs import CausalLMOutputWithPast, CausalLMOutput
-
-# typing imports
-from typing import Union, Tuple, Optional, TYPE_CHECKING, Dict, Any
+from transformers.modeling_outputs import CausalLMOutput, CausalLMOutputWithPast
 
 try:
     if TYPE_CHECKING:

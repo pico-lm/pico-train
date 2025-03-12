@@ -7,7 +7,7 @@ Specifies the hyperparameters for the Pico model/model architecture.
 from dataclasses import dataclass
 from typing import Optional
 
-from ._constants import VOCAB_SIZE, BATCH_SIZE, MAX_SEQ_LEN
+from ._constants import BATCH_SIZE, MAX_SEQ_LEN, VOCAB_SIZE
 
 
 @dataclass
