@@ -15,6 +15,7 @@ class LoggingConfig:
 
 @dataclass
 class WandbConfig:
+    # configure logging to Weights and Biases
     project: str = ""
     entity: str = ""
 

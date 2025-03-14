@@ -4,15 +4,15 @@ Utilities for checkpointing evaluation-related states (i.e. evaluation results, 
 We save the evaluation results in a JSON file at the step-specific evaluation results directory.
 """
 
-import os
 import json
-from huggingface_hub import upload_folder
-from src.training.utils.io import use_backoff
+import os
+from typing import Any, Dict
 
-# typing imports
-from typing import Dict, Any
-from src.config import CheckpointingConfig
+from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
+
+from src.config import CheckpointingConfig
+from src.training.utils.io import use_backoff
 
 
 @use_backoff()

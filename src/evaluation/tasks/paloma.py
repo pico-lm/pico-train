@@ -11,7 +11,6 @@ import evaluate
 from datasets import load_dataset
 from datasets.utils.logging import disable_progress_bar, enable_progress_bar
 
-# typing imports
 from src.config.evaluation_config import PalomaEvaluationConfig
 
 
@@ -30,10 +29,14 @@ def run_paloma_evaluation(
 
     disable_progress_bar()
 
+    # load custom evaluation space, see https://huggingface.co/spaces/pico-lm/perplexity
     perplexity = evaluate.load("pico-lm/perplexity")
+
     dataset = load_dataset(
         paloma_config.dataset_name, split=paloma_config.dataset_split
     )["text"]
+
+    # compute perplexity score on Paloma dataset
     perplexity_result = perplexity.compute(
         model_id=model_path,
         predictions=dataset,

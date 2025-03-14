@@ -6,26 +6,28 @@ the model and optimizer states, as well as the learning dynamics metrics.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
 
 from ._constants import (
-    RUNS_DIR,
     CHECKPOINTS_DIR,
-    LOGS_DIR,
+    EVAL_RESULTS_DIR,
     FABRIC_CHECKPOINT_DIR,
     FABRIC_CHECKPOINT_FILENAME,
-    EVAL_RESULTS_DIR,
     LEARNING_DYNAMICS_DIR,
+    LOGS_DIR,
+    RUNS_DIR,
 )
 
 
 @dataclass
 class TrainingCheckpointingConfig:
+    # Automatically resume training from the most recent checkpoint
     auto_resume: bool = True
 
 
 @dataclass
 class EvaluationCheckpointingConfig:
+    # Directory in which evaluation results are saved
     eval_results_dir: str = EVAL_RESULTS_DIR
 
 
@@ -64,9 +66,10 @@ class HuggingFaceCheckpointingConfig:
 
 @dataclass
 class CheckpointingConfig:
-    # Name of the run
+    # Assign a name to the run
     run_name: Optional[str] = None
 
+    # Defining checkpointing directories
     runs_dir: str = RUNS_DIR
     checkpoints_dir: str = CHECKPOINTS_DIR
     logs_dir: str = LOGS_DIR
