@@ -23,6 +23,7 @@ from datasets import Dataset, DownloadConfig, load_dataset
 from datasets import config as datasets_config
 from huggingface_hub import add_collection_item, create_branch, create_repo
 from lightning.fabric.loggers import Logger as FabricLogger
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
 
@@ -574,6 +575,7 @@ def initialize_wandb(
     return wandb_logger
 
 
+@rank_zero_only
 def initialize_logging(
     monitoring_config: MonitoringConfig,
     checkpointing_config: CheckpointingConfig,
@@ -582,6 +584,8 @@ def initialize_logging(
     """Initialize logging system with default logging, to file and console.
 
     The default logging system uses a file handler and a stream handler.
+
+    NOTE: this function is only called on rank 0.
 
     Args:
         monitoring_config: Configuration object containing monitoring settings.
@@ -592,9 +596,6 @@ def initialize_logging(
     """
 
     # ---- Standard Local Logger ---- #
-    if fabric.global_rank != 0:
-        return
-
     logger = logging.getLogger("pico-train")
     logger.setLevel(logging.INFO)
 
@@ -629,6 +630,7 @@ def initialize_logging(
 ########################################################
 
 
+@rank_zero_only
 @use_backoff()
 def initialize_hf_checkpointing(
     checkpointing_config: CheckpointingConfig, fabric: L.Fabric
@@ -636,6 +638,8 @@ def initialize_hf_checkpointing(
     """Initialize HuggingFace Checkpointing.
 
     Creates a HuggingFace repository if it doesn't exist, and creates a branch named after the run.
+
+    NOTE: this function is only called on rank 0.
 
     Args:
         checkpointing_config: Configuration object containing checkpointing settings; must have
@@ -645,9 +649,6 @@ def initialize_hf_checkpointing(
     Raises:
         RuntimeError: If unable to create HuggingFace repository after multiple attempts.
     """
-
-    if fabric.global_rank != 0:
-        return
 
     huggingface_repo_id = checkpointing_config.hf_checkpoint.repo_id
     assert (

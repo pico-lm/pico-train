@@ -660,12 +660,11 @@ class Trainer:
         self, evaluation_results: Dict[str, Any], batch_step: int
     ):
         """Log model evaluation metrics to experiment tracking system and console."""
-        if self.fabric.global_rank == 0:
-            self.log(f"Step {batch_step} -- 📊 Evaluation Results")
-            for i, (metric, result) in enumerate(evaluation_results.items()):
-                prefix = "└──" if i == len(evaluation_results) - 1 else "├──"
-                self.log(f"{prefix} {metric}: {result}")
-                self.fabric.log(f"eval/{metric}", result, step=batch_step)
+        self.log(f"Step {batch_step} -- 📊 Evaluation Results")
+        for i, (metric, result) in enumerate(evaluation_results.items()):
+            prefix = "└──" if i == len(evaluation_results) - 1 else "├──"
+            self.log(f"{prefix} {metric}: {result}")
+            self.fabric.log(f"eval/{metric}", result, step=batch_step)
 
     def _log_training_configuration(self):
         """
@@ -741,5 +740,5 @@ class Trainer:
 
     @rank_zero_only
     def log(self, msg: str, level: int = logging.INFO) -> None:
-        """Log messages only from rank zero process."""
+        """NOTE: Log messages only from rank zero process."""
         self.logger.log(level, msg)
