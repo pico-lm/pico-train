@@ -10,11 +10,13 @@ from typing import Any, Dict
 
 from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 
 from src.config import CheckpointingConfig
 from src.training.utils.io import use_backoff
 
 
+@rank_zero_only
 @use_backoff()
 def save_evaluation_results(
     checkpointing_config: CheckpointingConfig,
@@ -30,16 +32,15 @@ def save_evaluation_results(
             └── {checkpointing_config.eval_results_dir}/
                 └── step_{checkpoint_step}.json
 
+    NOTE: this function is only called on rank 0 to avoid conflicts; assumes that the evaluation
+    results are gathered on rank 0.
+
     Args:
         checkpointing_config: Configuration object containing checkpoint settings
         checkpoint_step: Current training checkpoint step (i.e. number of learning steps taken)
         fabric: Lightning Fabric instance
         evaluation_results: Dictionary containing evaluation metrics
     """
-
-    # NOTE: Only save on rank 0 to avoid conflicts (assumes evaluation results are gathered on rank 0)
-    if fabric.global_rank != 0:
-        return
 
     run_dir = os.path.join(checkpointing_config.runs_dir, checkpointing_config.run_name)
     eval_results_dir = os.path.join(

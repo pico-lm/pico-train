@@ -16,6 +16,7 @@ from datasets import Dataset
 from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
 from lightning.fabric.strategies import DeepSpeedStrategy
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
 from transformers import PreTrainedTokenizerBase
@@ -329,6 +330,7 @@ def compute_learning_dynamics_states(
     }
 
 
+@rank_zero_only
 @use_backoff()
 def save_learning_dynamics_states(
     checkpointing_config: CheckpointingConfig,
@@ -361,6 +363,8 @@ def save_learning_dynamics_states(
                 │      └── {prefix}_data/ # if learning_dynamics_dataset is provided
                 └── latest -> step_{checkpoint_step}/
 
+    NOTE: this function is only called on rank 0
+
     Args:
         checkpointing_config: The configuration object for checkpointing.
         checkpoint_step: The checkpoint step at which the learning dynamics states were computed.
@@ -371,10 +375,6 @@ def save_learning_dynamics_states(
             including input IDs that need to be decoded. (optional)
         tokenizer: The tokenizer used to decode input IDs into text. (optional)
     """
-
-    # Only rank 0 process saves checkpoints in distributed training
-    if fabric.global_rank != 0:
-        return
 
     runs_dir = checkpointing_config.runs_dir
     run_name = checkpointing_config.run_name
