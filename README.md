@@ -81,7 +81,7 @@ This uniformity means you can isolate model size as the primary variable, giving
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/rdiehlmartinez/pico.git
+   git clone https://github.com/pico-lm/pico-train
    cd pico
    ```
 
@@ -135,7 +135,7 @@ This uniformity means you can isolate model size as the primary variable, giving
   - Tools for uploading checkpoints to Hugging Face
 
 - **`src/config`**  
-  - Flexible YAML-based config system (hyperparameters, data pipelines, logging)
+  - Flexible Dataclass-based config system (model and training hyperparameters, checkpointing, logging)
 
 - **`configs/demo.yaml`**  
   - Example config with default values for quick experimentation
@@ -159,11 +159,11 @@ Pico is open-source under the [Apache License 2.0](LICENSE).
 If you use **Pico** in your research, please cite:
 
 ```bibtex
-@software{pico2024,
+@software{pico2025,
     author = {Diehl Martinez, Richard},
     title = {Pico: Framework for Training Tiny Language Models},
-    year = {2024},
-    url = {https://github.com/rdiehlmartinez/pico}
+    year = {2025},
+    url = {https://github.com/pico-lm}
 }
 ```
 
