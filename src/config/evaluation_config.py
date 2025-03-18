@@ -5,7 +5,7 @@ Specifies the hyperparameters for the evaluation process, i.e. what metrics to c
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
 
 from src.config._constants import MAX_SEQ_LEN
 
@@ -20,7 +20,7 @@ class PalomaEvaluationConfig:
 
 @dataclass
 class EvaluationConfig:
-    # Evaluation metrics to compute: by default, we compute the perplexity of the model
+    # Evaluation metrics to compute: by default, we compute the perplexity of the model on the paloma dataset
     metrics: Optional[List[str]] = field(default_factory=lambda: ["paloma"])
 
     # NOTE: Add other evaluation configs here

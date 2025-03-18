@@ -14,42 +14,41 @@ pipeline with the features:
 """
 
 import logging
-import lightning as L
-import torch
-import torch.nn.functional as F
 import os
 import platform
+from typing import Any, Dict
+
+import lightning as L
 import psutil
+import torch
+import torch.nn.functional as F
 import yaml
+from datasets import Dataset, load_dataset
 from lightning.fabric.utilities.rank_zero import rank_zero_only
 
-from datasets import Dataset, load_dataset
-from typing import Dict, Any
-
-from src.training.utils import (
-    initialize_run_dir,
-    initialize_fabric,
-    initialize_configuration,
-    initialize_dataset,
-    initialize_tokenizer,
-    initialize_dataloader,
-    initialize_lr_scheduler,
-    initialize_hf_checkpointing,
-    initialize_wandb,
-    initialize_logging,
-    initialize_optimizer,
-    initialize_model,
-)
-from src.training.utils.logging import pretty_print_yaml_config
 from src.checkpointing import (
+    compute_learning_dynamics_states,
     load_checkpoint,
     save_checkpoint,
     save_evaluation_results,
-    compute_learning_dynamics_states,
     save_learning_dynamics_states,
 )
-
 from src.evaluation import run_evaluation
+from src.training.utils import (
+    initialize_configuration,
+    initialize_dataloader,
+    initialize_dataset,
+    initialize_fabric,
+    initialize_hf_checkpointing,
+    initialize_logging,
+    initialize_lr_scheduler,
+    initialize_model,
+    initialize_optimizer,
+    initialize_run_dir,
+    initialize_tokenizer,
+    initialize_wandb,
+)
+from src.training.utils.logging import pretty_print_yaml_config
 
 
 class Trainer:
@@ -112,7 +111,7 @@ class Trainer:
             training_config=self.configs["training"], optimizer=self.optimizer
         )
 
-        # Wrap with Fabric
+        # Wrap model and optimizer with Fabric
         self.model, self.optimizer = self.fabric.setup(self.model, self.optimizer)
 
         # Setup HuggingFace Checkpointing
@@ -221,7 +220,7 @@ class Trainer:
                 self.learning_dynamics_eval_dataset = None
 
     def train(self) -> None:
-        """Execute the main training workflow.
+        """Execute the main training pipeline.
 
         This method orchestrates the complete training process by:
         1. Creating an initial checkpoint to save the starting state and evaluate the model as a
@@ -661,12 +660,11 @@ class Trainer:
         self, evaluation_results: Dict[str, Any], batch_step: int
     ):
         """Log model evaluation metrics to experiment tracking system and console."""
-        if self.fabric.global_rank == 0:
-            self.log(f"Step {batch_step} -- 📊 Evaluation Results")
-            for i, (metric, result) in enumerate(evaluation_results.items()):
-                prefix = "└──" if i == len(evaluation_results) - 1 else "├──"
-                self.log(f"{prefix} {metric}: {result}")
-                self.fabric.log(f"eval/{metric}", result, step=batch_step)
+        self.log(f"Step {batch_step} -- 📊 Evaluation Results")
+        for i, (metric, result) in enumerate(evaluation_results.items()):
+            prefix = "└──" if i == len(evaluation_results) - 1 else "├──"
+            self.log(f"{prefix} {metric}: {result}")
+            self.fabric.log(f"eval/{metric}", result, step=batch_step)
 
     def _log_training_configuration(self):
         """
@@ -742,5 +740,5 @@ class Trainer:
 
     @rank_zero_only
     def log(self, msg: str, level: int = logging.INFO) -> None:
-        """Log messages only from rank zero process."""
+        """NOTE: Log messages only from rank zero process."""
         self.logger.log(level, msg)

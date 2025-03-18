@@ -6,28 +6,28 @@ the model and optimizer states, as well as the learning dynamics metrics.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import List, Optional
 
 from ._constants import (
-    RUNS_DIR,
     CHECKPOINTS_DIR,
-    LOGS_DIR,
+    EVAL_RESULTS_DIR,
     FABRIC_CHECKPOINT_DIR,
     FABRIC_CHECKPOINT_FILENAME,
-    EVAL_RESULTS_DIR,
-    MAX_SEQ_LEN,
     LEARNING_DYNAMICS_DIR,
+    LOGS_DIR,
+    RUNS_DIR,
 )
 
 
 @dataclass
 class TrainingCheckpointingConfig:
+    # Automatically resume training from the most recent checkpoint
     auto_resume: bool = True
 
 
 @dataclass
 class EvaluationCheckpointingConfig:
-    load_checkpoint_path: Optional[str] = None
+    # Directory in which evaluation results are saved
     eval_results_dir: str = EVAL_RESULTS_DIR
 
 
@@ -43,8 +43,8 @@ class LearningDynamicsCheckpointingConfig:
     )
 
     # Sequence index at which to extract hidden states; by default, we extract the hidden states
-    # at the last token of the sequence
-    sequence_idx: int = MAX_SEQ_LEN - 1
+    # at the last token of the sequence (-1)
+    sequence_idx: int = -1
 
     # size of the sub-batch used for extracting learning dynamics states
     batch_size: int = 8
@@ -66,9 +66,10 @@ class HuggingFaceCheckpointingConfig:
 
 @dataclass
 class CheckpointingConfig:
-    # Name of the run
+    # Assign a name to the run
     run_name: Optional[str] = None
 
+    # Defining checkpointing directories
     runs_dir: str = RUNS_DIR
     checkpoints_dir: str = CHECKPOINTS_DIR
     logs_dir: str = LOGS_DIR

@@ -7,14 +7,14 @@ Specifies the hyperparameters for the Pico model/model architecture.
 from dataclasses import dataclass
 from typing import Optional
 
-from ._constants import VOCAB_SIZE, BATCH_SIZE, MAX_SEQ_LEN
+from ._constants import BATCH_SIZE, MAX_SEQ_LEN, VOCAB_SIZE
 
 
 @dataclass
 class ModelConfig:
     model_type: str = "pico_decoder"
 
-    # Pico Decoder Defaults
+    # Pico Decoder default hyperparameters
 
     d_model: int = 768
     n_layers: int = 12

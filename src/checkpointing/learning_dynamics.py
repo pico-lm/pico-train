@@ -6,26 +6,25 @@ We save the learning dynamics states in a subdirectory of the checkpointing dire
 
 import os
 import re
-import torch
-import torch.optim as optim
-from torch.nn import functional as F
-from torch.utils.data import DataLoader
-from huggingface_hub import upload_folder
+from typing import Dict, Optional
 
 import deepspeed
-
-from src.training.utils.initialization import initialize_model
-from src.training.utils.io import use_backoff
-
-# typing imports
+import torch
 import torch.nn as nn
-from typing import Dict, Optional
+import torch.optim as optim
 from datasets import Dataset
-from transformers import PreTrainedTokenizerBase
-from src.config import CheckpointingConfig
-from src.config.checkpointing_config import LearningDynamicsCheckpointingConfig
+from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
 from lightning.fabric.strategies import DeepSpeedStrategy
+from lightning.fabric.utilities.rank_zero import rank_zero_only
+from torch.nn import functional as F
+from torch.utils.data import DataLoader
+from transformers import PreTrainedTokenizerBase
+
+from src.config import CheckpointingConfig
+from src.config.checkpointing_config import LearningDynamicsCheckpointingConfig
+from src.training.utils.initialization import initialize_model
+from src.training.utils.io import use_backoff
 
 
 # NOTE: DeepSpeed requires a dummy optimizer to be passed in to the setup function
@@ -109,9 +108,9 @@ class CheckpointStateExtractor:
                 loss = F.cross_entropy(outputs, labels)
                 self.fabric.backward(loss, model=self.model)
 
-        # cleanup forward hooks - NOTE this is not strictly necessary, since self.model is a
-        # deepcopy of the original model; but it is good practice to remove the hooks after the
-        # forward pass is complete.
+        # cleanup forward hooks
+        # NOTE this is not strictly necessary, since self.model is a deepcopy of the original model
+        # but it is good practice to remove the hooks after the forward pass is complete.
         for hook in forward_hooks:
             hook.remove()
 
@@ -331,6 +330,7 @@ def compute_learning_dynamics_states(
     }
 
 
+@rank_zero_only
 @use_backoff()
 def save_learning_dynamics_states(
     checkpointing_config: CheckpointingConfig,
@@ -363,6 +363,8 @@ def save_learning_dynamics_states(
                 │      └── {prefix}_data/ # if learning_dynamics_dataset is provided
                 └── latest -> step_{checkpoint_step}/
 
+    NOTE: this function is only called on rank 0
+
     Args:
         checkpointing_config: The configuration object for checkpointing.
         checkpoint_step: The checkpoint step at which the learning dynamics states were computed.
@@ -373,10 +375,6 @@ def save_learning_dynamics_states(
             including input IDs that need to be decoded. (optional)
         tokenizer: The tokenizer used to decode input IDs into text. (optional)
     """
-
-    # Only rank 0 process saves checkpoints in distributed training
-    if fabric.global_rank != 0:
-        return
 
     runs_dir = checkpointing_config.runs_dir
     run_name = checkpointing_config.run_name

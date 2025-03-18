@@ -9,37 +9,36 @@ As always, this code is meant to be basic. We hard-code the obvious defaults, an
 more experimental stuff to you.
 """
 
-import lightning as L
-import torch
-import os
 import logging
-import yaml
+import os
+import warnings
 from dataclasses import fields, is_dataclass
 from datetime import datetime
-import wandb
-from huggingface_hub import add_collection_item, create_repo, create_branch
-from wandb.integration.lightning.fabric import WandbLogger
-from datasets import load_dataset, Dataset, DownloadConfig
+from typing import Dict, Optional, Union
+
+import lightning as L
+import torch
+import yaml
+from datasets import Dataset, DownloadConfig, load_dataset
 from datasets import config as datasets_config
+from huggingface_hub import add_collection_item, create_branch, create_repo
+from lightning.fabric.loggers import Logger as FabricLogger
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
-from typing import Optional, Dict, Union
-import warnings
 
+import wandb
 from src.config import (
-    TrainingConfig,
-    DataConfig,
-    ModelConfig,
-    EvaluationConfig,
-    MonitoringConfig,
     CheckpointingConfig,
+    DataConfig,
+    EvaluationConfig,
+    ModelConfig,
+    MonitoringConfig,
+    TrainingConfig,
 )
-
 from src.model import PicoDecoder
-
-from lightning.fabric.loggers import Logger as FabricLogger
-
 from src.training.utils.io import use_backoff
+from wandb.integration.lightning.fabric import WandbLogger
 
 warnings.filterwarnings(
     "ignore",
@@ -545,10 +544,12 @@ def initialize_wandb(
     """
 
     assert (
-        monitoring_config.wandb.project is not None and monitoring_config.wandb.project != ""
+        monitoring_config.wandb.project is not None
+        and monitoring_config.wandb.project != ""
     ), "Wandb project must be provided if wandb is to be used."
     assert (
-        monitoring_config.wandb.entity is not None and monitoring_config.wandb.entity != ""
+        monitoring_config.wandb.entity is not None
+        and monitoring_config.wandb.entity != ""
     ), "Wandb entity must be provided if wandb is to be used."
 
     _run_id = None
@@ -574,6 +575,7 @@ def initialize_wandb(
     return wandb_logger
 
 
+@rank_zero_only
 def initialize_logging(
     monitoring_config: MonitoringConfig,
     checkpointing_config: CheckpointingConfig,
@@ -582,6 +584,8 @@ def initialize_logging(
     """Initialize logging system with default logging, to file and console.
 
     The default logging system uses a file handler and a stream handler.
+
+    NOTE: this function is only called on rank 0.
 
     Args:
         monitoring_config: Configuration object containing monitoring settings.
@@ -592,9 +596,6 @@ def initialize_logging(
     """
 
     # ---- Standard Local Logger ---- #
-    if fabric.global_rank != 0:
-        return
-
     logger = logging.getLogger("pico-train")
     logger.setLevel(logging.INFO)
 
@@ -629,6 +630,7 @@ def initialize_logging(
 ########################################################
 
 
+@rank_zero_only
 @use_backoff()
 def initialize_hf_checkpointing(
     checkpointing_config: CheckpointingConfig, fabric: L.Fabric
@@ -636,6 +638,8 @@ def initialize_hf_checkpointing(
     """Initialize HuggingFace Checkpointing.
 
     Creates a HuggingFace repository if it doesn't exist, and creates a branch named after the run.
+
+    NOTE: this function is only called on rank 0.
 
     Args:
         checkpointing_config: Configuration object containing checkpointing settings; must have
@@ -645,9 +649,6 @@ def initialize_hf_checkpointing(
     Raises:
         RuntimeError: If unable to create HuggingFace repository after multiple attempts.
     """
-
-    if fabric.global_rank != 0:
-        return
 
     huggingface_repo_id = checkpointing_config.hf_checkpoint.repo_id
     assert (

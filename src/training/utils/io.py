@@ -1,3 +1,5 @@
+"""Defines a retry wrapper for io operations."""
+
 import time
 from functools import wraps
 
