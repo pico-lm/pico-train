@@ -1,6 +1,6 @@
 # 🚀 **Pico Train**
 
-**Pico Train** is a minimalistic framework for training language models—from tiny 1M-parameter models to mid-scale 1B—while automatically storing **rich checkpoints** (including activations and gradients) for **in-depth learning dynamics research**. 
+Pico Train is a lightweight framework for training language models—from tiny-scale (~1M parameters) to mid-scale (~1B parameters)—with built-in rich checkpointing that captures activations, gradients, and model states, enabling detailed learning dynamics research.
 
 Our **suite of pre-trained models** is already publicly available on our [Hugging Face organization](https://huggingface.co/pico-lm), and a dedicated companion library for advanced analysis—[**pico-analyze**](https://github.com/pico-lm/pico-analyze)—is fully released for deeper checkpoint studies.
 
@@ -19,7 +19,7 @@ Our **suite of pre-trained models** is already publicly available on our [Huggin
    - Enriched with **activation and gradient** snapshots for interpretability  
 
 3. **Focused Scale Range**  
-   - Optimized to train models from **1M to 1B parameters**, where learning dynamics research is often most viable  
+   - Optimized to train models from **1M to 1B parameters**, where learning dynamics research is most viable  
 
 4. **Clean, Pre-tokenized Data**  
    - Uses the curated [Pretokenized-Dolma](https://allenai.org/dolma) dataset, available on [Hugging Face](https://huggingface.co/pico-lm/pretokenized-dolma)  
