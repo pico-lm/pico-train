@@ -161,7 +161,7 @@ If you use **Pico** in your research, please cite:
 ```bibtex
 @software{pico2025,
     author = {Diehl Martinez, Richard},
-    title = {Pico: Framework for Training Tiny Language Models},
+    title = {Pico: A Lightweight Framework for Studying Language Model Learning Dynamics},
     year = {2025},
     url = {https://github.com/pico-lm}
 }
