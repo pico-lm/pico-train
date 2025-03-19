@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "pico"
-version = "0.1.0"
-description = "A framework for training small language models and analyzing their learning dynamics"
-authors = ["Richard Diehl Martinez <richarddiehl@gmail.com>"]
+name = "pico-train"
+version = "1.0.0"
+description = "A minimalistic framework for transparently training language models and storing comprehensive checkpoints for in-depth learning dynamics research"
+authors = ["Richard Diehl Martinez <richard@picolm.io>"]
 license = "Apache 2.0"
 readme = "README.md"
 packages = [{include = "src"}]
