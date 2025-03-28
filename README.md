@@ -82,7 +82,7 @@ This uniformity means you can isolate model size as the primary variable, giving
 
    ```bash
    git clone https://github.com/pico-lm/pico-train
-   cd pico
+   cd pico-train
    ```
 
 2. **Configure Environment**
