@@ -168,4 +168,3 @@ If you use **Pico** in your research, please cite:
 ```
 
 **Happy Training!** For more information and tutorials, visit our website at [picolm.io](https://picolm.io).
-```
