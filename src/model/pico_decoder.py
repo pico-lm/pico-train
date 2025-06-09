@@ -534,15 +534,12 @@ class PicoDecoderHFConfig(PretrainedConfig):
 
     @classmethod
     def from_dict(cls, config_dict: Dict[str, Any], **kwargs) -> "PicoDecoderHFConfig":
-        # NOTE The typical from_dict method doesn't actually set the attributes unless they are
-        # defined in the constructor.
-
-        pico_config = cls(**kwargs)
-
-        # Because this class is just a wrapper around the ModelConfig dataclass, we need to do
-        # a little extra work to ensure that the attributes are actually set.
-        for key, value in config_dict.items():
-            setattr(pico_config, key, value)
+        """
+        Initialize config from a dictionary. Note that no kwargs are passed to the constructor --
+        this is because with some kwargs special handling is required and can make this class
+        brittle.
+        """
+        pico_config = cls(**config_dict)
 
         return_unused_kwargs = kwargs.pop("return_unused_kwargs", False)
         unused_kwargs = {
