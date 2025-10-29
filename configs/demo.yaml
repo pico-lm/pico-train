@@ -32,6 +32,13 @@ monitoring:
     project: "pico-demo"
     entity: "pico-lm"
 
+  # Optional: Enable Pico Labs for experiment tracking
+  # Pico Labs is a platform to easily run and share experiments on the web
+  # Requires PICO_API_KEY and PICO_LAB_HASH environment variables
+  # save_to_picolabs: true
+  # pico_report:
+  #   lab_hash: "your-lab-hash"  # Optional if PICO_LAB_HASH env var is set
+
   logging:
     log_every_n_steps: 10
 

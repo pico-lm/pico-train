@@ -44,6 +44,7 @@ from src.training.utils import (
     initialize_lr_scheduler,
     initialize_model,
     initialize_optimizer,
+    initialize_pico_reporter,
     initialize_run_dir,
     initialize_tokenizer,
     initialize_wandb,
@@ -87,6 +88,15 @@ class Trainer:
             )
         else:
             wandb_logger = None
+
+        # Setup Pico Reporter
+        if self.configs["monitoring"].save_to_picolabs:
+            self.pico_reporter = initialize_pico_reporter(
+                monitoring_config=self.configs["monitoring"],
+                checkpointing_config=self.configs["checkpointing"],
+            )
+        else:
+            self.pico_reporter = None
 
         # Setup Fabric
         self.fabric = initialize_fabric(
@@ -650,6 +660,17 @@ class Trainer:
             step=batch_step,
         )
 
+        # Log to Pico Reporter if enabled
+        if self.pico_reporter is not None:
+            self.pico_reporter.log_training_metrics(
+                {
+                    "loss": avg_loss,
+                    "inf_or_nan_count": gathered_interval_inf_or_nan_count,
+                    "learning_rate": self.lr_scheduler.get_last_lr()[0],
+                },
+                step=batch_step,
+            )
+
         # Log to console in tree format
         self.log(f"Step {batch_step} -- 🔄 Training Metrics")
         self.log(f"├── Loss: {avg_loss:.4f}")
@@ -665,6 +686,12 @@ class Trainer:
             prefix = "└──" if i == len(evaluation_results) - 1 else "├──"
             self.log(f"{prefix} {metric}: {result}")
             self.fabric.log(f"eval/{metric}", result, step=batch_step)
+
+        # Log to Pico Reporter if enabled
+        if self.pico_reporter is not None:
+            self.pico_reporter.log_evaluation_metrics(
+                evaluation_results, step=batch_step
+            )
 
     def _log_training_configuration(self):
         """

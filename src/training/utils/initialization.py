@@ -575,6 +575,54 @@ def initialize_wandb(
     return wandb_logger
 
 
+@use_backoff()
+def initialize_pico_reporter(
+    monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig
+):
+    """Initialize Pico Labs Reporter.
+
+    Pico Labs is a platform to easily run and share experiments on the web.
+    This function initializes the Pico Reporter client for tracking training metrics,
+    evaluation results, and checkpoint data to your private dashboard at picolabs.space.
+
+    It uses environment variables for API key and base URL:
+    - PICO_API_KEY (required)
+    - PICO_LAB_HASH (can be overridden by config)
+    - PICO_BASE_URL (optional, defaults to https://picolabs.space/api)
+
+    Args:
+        monitoring_config: Configuration object containing monitoring settings.
+        checkpointing_config: Configuration object containing checkpointing settings.
+
+    Returns:
+        Optional[PicoReporter]: A Pico Reporter instance for experiment tracking.
+    """
+    try:
+        from pico_report.integrations import PicoReporter
+    except ImportError:
+        raise ImportError(
+            "pico-report is not installed. Install it with: pip install pico-report "
+            "or poetry add pico-report"
+        )
+
+    # Lab hash can be provided via config or environment variable
+    lab_hash = monitoring_config.pico_report.lab_hash
+    if not lab_hash or lab_hash == "":
+        lab_hash = os.getenv("PICO_LAB_HASH", "")
+
+    assert (
+        lab_hash is not None and lab_hash != ""
+    ), "Lab hash must be provided via config (pico_report.lab_hash) or PICO_LAB_HASH environment variable."
+
+    # Create the reporter - it will use PICO_API_KEY and PICO_BASE_URL from environment
+    pico_reporter = PicoReporter(
+        lab_hash=lab_hash,
+        experiment_name=checkpointing_config.run_name,
+    )
+
+    return pico_reporter
+
+
 @rank_zero_only
 def initialize_logging(
     monitoring_config: MonitoringConfig,

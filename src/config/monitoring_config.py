@@ -21,9 +21,23 @@ class WandbConfig:
 
 
 @dataclass
+class PicoReportConfig:
+    # Configure logging to Pico Report
+    # Note: Requires PICO_API_KEY and PICO_LAB_HASH environment variables to be set
+    # Optional: PICO_BASE_URL (defaults to https://picolabs.space/api)
+    lab_hash: str = ""
+
+
+@dataclass
 class MonitoringConfig:
     logging: LoggingConfig = field(default_factory=LoggingConfig)
 
     # Weights and Biases
     save_to_wandb: bool = False
     wandb: WandbConfig = field(default_factory=WandbConfig)
+
+    # Pico Labs - A platform to easily run and share experiments on the web
+    # Automatically tracks training metrics, evaluation results, and checkpoints
+    # to your private dashboard at https://picolabs.space
+    save_to_picolabs: bool = False
+    pico_report: PicoReportConfig = field(default_factory=PicoReportConfig)

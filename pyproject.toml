@@ -23,6 +23,10 @@ torch = "^2.5.1"
 evaluate = "^0.4.3"
 deepspeed = "^0.16.2"
 rich = "^13.9.4"
+pico-report = {version = "^1.0.0", optional = true}
+
+[tool.poetry.extras]
+pico-report = ["pico-report"]
 
 [tool.poetry.group.dev.dependencies]
 ipykernel = "^6.29.5"

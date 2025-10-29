@@ -100,12 +100,21 @@ if [ -f .env ]; then
     else
         print_warning "One or both of HF_TOKEN and WANDB_API_KEY are not set."
     fi
+    
+    # Check for optional Pico Report variables
+    if [[ -n "$PICO_API_KEY" && -n "$PICO_LAB_HASH" ]]; then
+        print_success "Optional Pico Report variables (PICO_API_KEY, PICO_LAB_HASH) are set!"
+    fi
 else
     print_warning "No .env file found."
     echo -e "${YELLOW}    You might need to create one with HF_TOKEN and WANDB_API_KEY${NC}"
     echo -e "${YELLOW}    Example .env contents:${NC}"
     echo "    export HF_TOKEN=your_huggingface_token"
     echo "    export WANDB_API_KEY=your_wandb_key"
+    echo ""
+    echo -e "${YELLOW}    Optional (for Pico Report integration):${NC}"
+    echo "    export PICO_API_KEY=your_pico_api_key"
+    echo "    export PICO_LAB_HASH=your_lab_hash"
     ERRORS_FOUND=$((ERRORS_FOUND + 1))
 fi
 
