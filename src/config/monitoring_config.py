@@ -26,7 +26,7 @@ class PicoReportConfig:
     # Note: Requires PICO_API_KEY and PICO_LAB_HASH environment variables to be set
     # Optional: PICO_BASE_URL (defaults to https://picolabs.space/api)
     lab_hash: str = ""
-    
+
     # Git tracking: automatically create git commits for each experiment
     # This captures the exact code state and links it to your experiment in the dashboard
     auto_commit: bool = True
