@@ -619,6 +619,8 @@ def initialize_pico_reporter(
         lab_hash is not None and lab_hash != ""
     ), "Lab hash must be provided via config (pico_report.lab_hash) or PICO_LAB_HASH environment variable."
 
+    experiment_name = checkpointing_config.run_name
+
     # Get auto_commit setting from config
     auto_commit = monitoring_config.pico_report.auto_commit
 
@@ -626,8 +628,14 @@ def initialize_pico_reporter(
     # auto_commit is passed via kwargs and becomes part of the ReporterConfig
     pico_reporter = PicoReporter(
         lab_hash=lab_hash,
-        experiment_name=checkpointing_config.run_name,
+        experiment_name=experiment_name,
         auto_commit=auto_commit,  # Passed as kwarg to config
+    )
+
+    # Setup experiment
+    pico_reporter.setup_experiment(
+        experiment_name=experiment_name,
+        description=f"Training experiment: {experiment_name}",
     )
 
     return pico_reporter
