@@ -590,6 +590,11 @@ def initialize_pico_reporter(
     - PICO_LAB_HASH (can be overridden by config)
     - PICO_BASE_URL (optional, defaults to https://picolabs.space/api)
 
+    The reporter can automatically create git commits for each experiment when auto_commit
+    is enabled in the config (pico_report.auto_commit). This captures the exact code state
+    and links it to your experiment, allowing you to see code diffs between experiments
+    in the dashboard.
+
     Args:
         monitoring_config: Configuration object containing monitoring settings.
         checkpointing_config: Configuration object containing checkpointing settings.
@@ -614,10 +619,15 @@ def initialize_pico_reporter(
         lab_hash is not None and lab_hash != ""
     ), "Lab hash must be provided via config (pico_report.lab_hash) or PICO_LAB_HASH environment variable."
 
+    # Get auto_commit setting from config
+    auto_commit = monitoring_config.pico_report.auto_commit
+
     # Create the reporter - it will use PICO_API_KEY and PICO_BASE_URL from environment
+    # auto_commit is passed via kwargs and becomes part of the ReporterConfig
     pico_reporter = PicoReporter(
         lab_hash=lab_hash,
         experiment_name=checkpointing_config.run_name,
+        auto_commit=auto_commit,  # Passed as kwarg to config
     )
 
     return pico_reporter
