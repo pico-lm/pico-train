@@ -7,11 +7,10 @@ in a subdirectory. This is done to facilitate easier versioning of the HuggingFa
 (which are what gets uploaded to the Hub).
 """
 
-import os
 from dataclasses import asdict
+import os
 from typing import Any, Dict, Tuple, Union
 
-import yaml
 from huggingface_hub import upload_file, upload_folder
 from lightning.fabric import Fabric
 from lightning.fabric.strategies import DeepSpeedStrategy
@@ -20,6 +19,7 @@ from torch import nn
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 from transformers import PreTrainedTokenizerBase
+import yaml
 
 from src.config import CheckpointingConfig
 from src.training.utils.io import use_backoff
@@ -63,9 +63,7 @@ def load_checkpoint(
         return None
 
     # Load from specified fabric checkpoint subdirectory
-    fabric_checkpoint_path = os.path.join(
-        checkpoint_path, checkpointing_config.fabric_checkpoint_dir
-    )
+    fabric_checkpoint_path = os.path.join(checkpoint_path, checkpointing_config.fabric_checkpoint_dir)
 
     checkpoint_state = {
         "_model": model,
@@ -74,9 +72,7 @@ def load_checkpoint(
     }
 
     if not isinstance(fabric.strategy, DeepSpeedStrategy):
-        fabric_load_file = os.path.join(
-            fabric_checkpoint_path, checkpointing_config.fabric_checkpoint_filename
-        )
+        fabric_load_file = os.path.join(fabric_checkpoint_path, checkpointing_config.fabric_checkpoint_filename)
     else:
         # Deepspeed checkpoints create sub-directory with distributed checkpoint file
         fabric_load_file = fabric_checkpoint_path
@@ -197,9 +193,7 @@ def save_checkpoint(
 
     if not isinstance(fabric.strategy, DeepSpeedStrategy):
         checkpoint_state["_rng_states"] = _collect_rng_states()
-        fabric_save_file = os.path.join(
-            fabric_checkpoint_path, checkpointing_config.fabric_checkpoint_filename
-        )
+        fabric_save_file = os.path.join(fabric_checkpoint_path, checkpointing_config.fabric_checkpoint_filename)
     else:
         # Deepspeed checkpoints create sub-directory with distributed checkpoint file
         fabric_save_file = fabric_checkpoint_path
@@ -221,9 +215,7 @@ def save_checkpoint(
         latest_symlink_path = os.path.join(root_checkpoint_path, "latest")
         if os.path.lexists(latest_symlink_path):
             os.remove(latest_symlink_path)
-        os.symlink(
-            f"step_{checkpoint_step}", latest_symlink_path, target_is_directory=True
-        )
+        os.symlink(f"step_{checkpoint_step}", latest_symlink_path, target_is_directory=True)
 
     ########################################################
     #

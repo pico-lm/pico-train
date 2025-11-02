@@ -16,8 +16,8 @@ libraries/frameworks.
 
 import os
 
-import torch
 from lightning.fabric import Fabric
+import torch
 from torch import nn
 
 from src.config import CheckpointingConfig, EvaluationConfig
@@ -80,15 +80,15 @@ def run_evaluation(
     # to determine how to handle distributed evaluation.
     if fabric.global_rank == 0:
         run_name = checkpointing_config.run_name
-        model_path = f"{os.getcwd()}/{checkpointing_config.runs_dir}/{run_name}/{checkpointing_config.checkpoints_dir}/latest"
+        model_path = (
+            f"{os.getcwd()}/{checkpointing_config.runs_dir}/{run_name}/{checkpointing_config.checkpoints_dir}/latest"
+        )
         os.makedirs(model_path, exist_ok=True)
 
         for metric in evaluation_config.metrics:
             # NOTE: add your own metrics here
             if metric == "paloma":
-                evaluation_result = run_paloma_evaluation(
-                    model_path, evaluation_config.paloma
-                )
+                evaluation_result = run_paloma_evaluation(model_path, evaluation_config.paloma)
             else:
                 raise ValueError(f"Metric {metric} not supported")
 

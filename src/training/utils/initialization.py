@@ -9,25 +9,25 @@ As always, this code is meant to be basic. We hard-code the obvious defaults, an
 more experimental stuff to you.
 """
 
-import logging
-import os
-import warnings
 from dataclasses import fields, is_dataclass
 from datetime import datetime
+import logging
+import os
 from typing import Dict, Optional, Union
+import warnings
 
-import lightning as L
-import torch
-import wandb
-import yaml
 from datasets import Dataset, DownloadConfig, load_dataset
 from datasets import config as datasets_config
 from huggingface_hub import add_collection_item, create_branch, create_repo
+import lightning as L
 from lightning.fabric.loggers import Logger as FabricLogger
 from lightning.fabric.utilities.rank_zero import rank_zero_only
+import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer
+import wandb
 from wandb.integration.lightning.fabric import WandbLogger
+import yaml
 
 from src.config import (
     CheckpointingConfig,
@@ -112,18 +112,10 @@ def initialize_configuration(
         overrides = yaml.safe_load(open(config_path, "r"))
         data_config = _apply_config_overrides(data_config, overrides.get("data", {}))
         model_config = _apply_config_overrides(model_config, overrides.get("model", {}))
-        training_config = _apply_config_overrides(
-            training_config, overrides.get("training", {})
-        )
-        evaluation_config = _apply_config_overrides(
-            evaluation_config, overrides.get("evaluation", {})
-        )
-        monitoring_config = _apply_config_overrides(
-            monitoring_config, overrides.get("monitoring", {})
-        )
-        checkpointing_config = _apply_config_overrides(
-            checkpointing_config, overrides.get("checkpointing", {})
-        )
+        training_config = _apply_config_overrides(training_config, overrides.get("training", {}))
+        evaluation_config = _apply_config_overrides(evaluation_config, overrides.get("evaluation", {}))
+        monitoring_config = _apply_config_overrides(monitoring_config, overrides.get("monitoring", {}))
+        checkpointing_config = _apply_config_overrides(checkpointing_config, overrides.get("checkpointing", {}))
 
     configs = {
         "data": data_config,
@@ -162,9 +154,7 @@ def initialize_run_dir(checkpointing_config: CheckpointingConfig) -> str:
     return run_dir
 
 
-def initialize_fabric(
-    training_config: TrainingConfig, wandb_logger: Optional[FabricLogger] = None
-):
+def initialize_fabric(training_config: TrainingConfig, wandb_logger: Optional[FabricLogger] = None):
     """Initialize Lightning Fabric for distributed training.
 
     Sets up a Lightning Fabric instance with the specified configuration for
@@ -182,9 +172,7 @@ def initialize_fabric(
         >>> fabric = initialize_fabric(training_config, wandb_logger)
     """
 
-    total_devices = (
-        training_config.fabric.num_devices * training_config.fabric.num_nodes
-    )
+    total_devices = training_config.fabric.num_devices * training_config.fabric.num_nodes
 
     if total_devices > 1:
         strategy = "deepspeed_stage_2"
@@ -299,9 +287,7 @@ def initialize_dataset(
         # NOTE: We wrap the dataset in a ShardedIterableDataset, which is a custom class that
         # allows us to shard an iterable dataset across multiple processes. This is useful for
         # distributed training, where we want data-parallelism.
-        dataset = ShardedIterableDataset(
-            base_dataset, fabric.global_rank, fabric.world_size
-        )
+        dataset = ShardedIterableDataset(base_dataset, fabric.global_rank, fabric.world_size)
     else:
         dataset = base_dataset
 
@@ -428,18 +414,14 @@ def initialize_optimizer(training_config: TrainingConfig, model: torch.nn.Module
     """
 
     if training_config.optimization.optimizer == "adamw":
-        optimizer = torch.optim.AdamW(
-            model.parameters(), lr=training_config.optimization.lr
-        )
+        optimizer = torch.optim.AdamW(model.parameters(), lr=training_config.optimization.lr)
     else:
         raise ValueError(f"Invalid optimizer: {training_config.optimization.optimizer}")
 
     return optimizer
 
 
-def initialize_lr_scheduler(
-    training_config: TrainingConfig, optimizer: torch.optim.Optimizer
-):
+def initialize_lr_scheduler(training_config: TrainingConfig, optimizer: torch.optim.Optimizer):
     """Initialize a learning rate scheduler with warmup and decay.
 
     The default is a learning rate scheduler that implements a linear warmup followed by
@@ -465,8 +447,7 @@ def initialize_lr_scheduler(
             else:
                 return max(
                     0.0,
-                    float(max_steps - curr_step)
-                    / float(max(1, max_steps - num_warmup_steps)),
+                    float(max_steps - curr_step) / float(max(1, max_steps - num_warmup_steps)),
                 )
 
         lr_lambda = lambda step: _lr_lambda(  # noqa: E731
@@ -479,9 +460,7 @@ def initialize_lr_scheduler(
             lr_lambda,
         )
     else:
-        raise ValueError(
-            f"Invalid learning rate scheduler: {training_config.optimization.lr_scheduler}"
-        )
+        raise ValueError(f"Invalid learning rate scheduler: {training_config.optimization.lr_scheduler}")
 
     return lr_scheduler
 
@@ -528,9 +507,7 @@ def _initialize_log_file(checkpointing_config: CheckpointingConfig) -> str:
 
 
 @use_backoff()
-def initialize_wandb(
-    monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig
-):
+def initialize_wandb(monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig):
     """Initialize Weights and Biases.
 
     This function initializes Weights and Biases based on the configuration settings.
@@ -544,12 +521,10 @@ def initialize_wandb(
     """
 
     assert (
-        monitoring_config.wandb.project is not None
-        and monitoring_config.wandb.project != ""
+        monitoring_config.wandb.project is not None and monitoring_config.wandb.project != ""
     ), "Wandb project must be provided if wandb is to be used."
     assert (
-        monitoring_config.wandb.entity is not None
-        and monitoring_config.wandb.entity != ""
+        monitoring_config.wandb.entity is not None and monitoring_config.wandb.entity != ""
     ), "Wandb entity must be provided if wandb is to be used."
 
     _run_id = None
@@ -576,9 +551,7 @@ def initialize_wandb(
 
 
 @use_backoff()
-def initialize_pico_reporter(
-    monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig
-):
+def initialize_pico_reporter(monitoring_config: MonitoringConfig, checkpointing_config: CheckpointingConfig):
     """Initialize Pico Labs Reporter.
 
     Pico Labs is a platform to easily run and share experiments on the web.
@@ -606,8 +579,7 @@ def initialize_pico_reporter(
         from pico_report.integrations import PicoReporter
     except ImportError:
         raise ImportError(
-            "pico-report is not installed. Install it with: pip install pico-report "
-            "or poetry add pico-report"
+            "pico-report is not installed. Install it with: pip install pico-report " "or poetry add pico-report"
         )
 
     # Lab hash can be provided via config or environment variable
@@ -698,9 +670,7 @@ def initialize_logging(
 
 @rank_zero_only
 @use_backoff()
-def initialize_hf_checkpointing(
-    checkpointing_config: CheckpointingConfig, fabric: L.Fabric
-):
+def initialize_hf_checkpointing(checkpointing_config: CheckpointingConfig, fabric: L.Fabric):
     """Initialize HuggingFace Checkpointing.
 
     Creates a HuggingFace repository if it doesn't exist, and creates a branch named after the run.
@@ -717,9 +687,7 @@ def initialize_hf_checkpointing(
     """
 
     huggingface_repo_id = checkpointing_config.hf_checkpoint.repo_id
-    assert (
-        huggingface_repo_id is not None and huggingface_repo_id != ""
-    ), "hf_checkpoint.repo_id must be provided."
+    assert huggingface_repo_id is not None and huggingface_repo_id != "", "hf_checkpoint.repo_id must be provided."
 
     repo = create_repo(huggingface_repo_id, exist_ok=True)
 

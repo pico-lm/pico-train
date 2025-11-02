@@ -18,13 +18,13 @@ import os
 import platform
 from typing import Any, Dict
 
+from datasets import Dataset, load_dataset
 import lightning as L
+from lightning.fabric.utilities.rank_zero import rank_zero_only
 import psutil
 import torch
 import torch.nn.functional as F
 import yaml
-from datasets import Dataset, load_dataset
-from lightning.fabric.utilities.rank_zero import rank_zero_only
 
 from src.checkpointing import (
     compute_learning_dynamics_states,
@@ -114,21 +114,15 @@ class Trainer:
 
         # Setup Model, Optimizer, and Dataloaders
         self.model = initialize_model(model_config=self.configs["model"])
-        self.optimizer = initialize_optimizer(
-            training_config=self.configs["training"], model=self.model
-        )
-        self.lr_scheduler = initialize_lr_scheduler(
-            training_config=self.configs["training"], optimizer=self.optimizer
-        )
+        self.optimizer = initialize_optimizer(training_config=self.configs["training"], model=self.model)
+        self.lr_scheduler = initialize_lr_scheduler(training_config=self.configs["training"], optimizer=self.optimizer)
 
         # Wrap model and optimizer with Fabric
         self.model, self.optimizer = self.fabric.setup(self.model, self.optimizer)
 
         # Setup HuggingFace Checkpointing
         if self.configs["checkpointing"].save_to_hf:
-            initialize_hf_checkpointing(
-                checkpointing_config=self.configs["checkpointing"], fabric=self.fabric
-            )
+            initialize_hf_checkpointing(checkpointing_config=self.configs["checkpointing"], fabric=self.fabric)
 
         ########################################################
         #
@@ -180,9 +174,7 @@ class Trainer:
             fabric=self.fabric,
             dataset=self.train_dataset,
         )
-        self.train_dataloader = self.fabric.setup_dataloaders(
-            self.train_dataloader, use_distributed_sampler=False
-        )
+        self.train_dataloader = self.fabric.setup_dataloaders(self.train_dataloader, use_distributed_sampler=False)
 
         self.tokenizer = initialize_tokenizer(data_config=self.configs["data"])
 
@@ -192,8 +184,7 @@ class Trainer:
         train_iterator = iter(self.train_dataloader)
         if fast_forward_steps > 0:
             fast_forward_sub_steps = (
-                fast_forward_steps
-                * self.configs["training"].optimization.gradient_accumulation_steps
+                fast_forward_steps * self.configs["training"].optimization.gradient_accumulation_steps
             )
             for _ in range(fast_forward_sub_steps):
                 next(train_iterator)
@@ -211,8 +202,7 @@ class Trainer:
 
         # Helper flag to determine if we should evaluate the model
         self.should_evaluate = (
-            self.configs["evaluation"].metrics is not None
-            and len(self.configs["evaluation"].metrics) > 0
+            self.configs["evaluation"].metrics is not None and len(self.configs["evaluation"].metrics) > 0
         )
 
         self.should_compute_learning_dynamics = (
@@ -268,9 +258,7 @@ class Trainer:
                     fabric=self.fabric,
                     model=self.model,
                 )
-                self._log_evaluation_results(
-                    evaluation_results, self.initial_batch_step
-                )
+                self._log_evaluation_results(evaluation_results, self.initial_batch_step)
                 save_evaluation_results(
                     checkpointing_config=self.configs["checkpointing"],
                     fabric=self.fabric,
@@ -290,9 +278,7 @@ class Trainer:
                         fabric=self.fabric,
                         model=self.model,
                     )
-                    self._log_evaluation_results(
-                        evaluation_results, self.initial_batch_step
-                    )
+                    self._log_evaluation_results(evaluation_results, self.initial_batch_step)
                     save_evaluation_results(
                         checkpointing_config=self.configs["checkpointing"],
                         fabric=self.fabric,
@@ -415,10 +401,7 @@ class Trainer:
             training_batch = {"input_ids": []}
 
         # NOTE: determine what sub-batch we should start from
-        initial_sub_batch_step = (
-            batch_step
-            * self.configs["training"].optimization.gradient_accumulation_steps
-        )
+        initial_sub_batch_step = batch_step * self.configs["training"].optimization.gradient_accumulation_steps
 
         ###############################################################
         #
@@ -430,9 +413,7 @@ class Trainer:
         #
         ###############################################################
 
-        for sub_batch_step, sub_batch in enumerate(
-            self.train_iterator, start=initial_sub_batch_step
-        ):
+        for sub_batch_step, sub_batch in enumerate(self.train_iterator, start=initial_sub_batch_step):
             # NOTE: We want to store the entire training batch whenever we are computing learning dynamics
             # and we are at a checkpointing step.
             should_store_training_batch = self.should_compute_learning_dynamics and (
@@ -455,9 +436,7 @@ class Trainer:
                 # NOTE: On multi-GPU, we need to reshape the input_ids to be a 2D tensor; on
                 # a single GPU, the input_ids are already a 2D tensor.
                 if self.fabric.world_size > 1:
-                    gathered_input_ids = gathered_input_ids.reshape(
-                        -1, *gathered_input_ids.shape[2:]
-                    )
+                    gathered_input_ids = gathered_input_ids.reshape(-1, *gathered_input_ids.shape[2:])
 
                 training_batch["input_ids"].extend(gathered_input_ids.tolist())
 
@@ -475,13 +454,10 @@ class Trainer:
                 "training"
             ].optimization.gradient_accumulation_steps != 0
 
-            with self.fabric.no_backward_sync(
-                self.model, enabled=should_accumulate_gradients
-            ):
+            with self.fabric.no_backward_sync(self.model, enabled=should_accumulate_gradients):
                 loss = F.cross_entropy(model_output, labels)
                 self.fabric.backward(
-                    loss
-                    / self.configs["training"].optimization.gradient_accumulation_steps,
+                    loss / self.configs["training"].optimization.gradient_accumulation_steps,
                     model=self.model,
                 )
 
@@ -542,9 +518,7 @@ class Trainer:
                         learning_dynamics_dataset=training_batch_dataset,
                         tokenizer=self.tokenizer,
                     )
-                    training_batch = {
-                        "input_ids": []
-                    }  # Resetting training_batch for next training batch
+                    training_batch = {"input_ids": []}  # Resetting training_batch for next training batch
 
                     # Validation Data Learning Dynamics
                     if self.learning_dynamics_eval_dataset is not None:
@@ -632,21 +606,11 @@ class Trainer:
         Gathers together the training metrics computed across all processes in distributed training
         and logs them in a tree-style format.
         """
-        gathered_interval_loss = self.fabric.all_reduce(
-            interval_loss, reduce_op="sum"
-        ).item()
-        gathered_interval_inf_or_nan_count = self.fabric.all_reduce(
-            interval_inf_or_nan_count, reduce_op="sum"
-        ).item()
-        gathered_interval_steps = self.fabric.all_reduce(
-            interval_steps, reduce_op="sum"
-        ).item()
+        gathered_interval_loss = self.fabric.all_reduce(interval_loss, reduce_op="sum").item()
+        gathered_interval_inf_or_nan_count = self.fabric.all_reduce(interval_inf_or_nan_count, reduce_op="sum").item()
+        gathered_interval_steps = self.fabric.all_reduce(interval_steps, reduce_op="sum").item()
 
-        avg_loss = (
-            gathered_interval_loss / gathered_interval_steps
-            if gathered_interval_steps > 0
-            else float("inf")
-        )
+        avg_loss = gathered_interval_loss / gathered_interval_steps if gathered_interval_steps > 0 else float("inf")
 
         self.fabric.log("train/loss", avg_loss, step=batch_step)
         self.fabric.log(
@@ -677,9 +641,7 @@ class Trainer:
         self.log(f"├── Learning Rate: {self.lr_scheduler.get_last_lr()[0]:.2e}")
         self.log(f"└── Inf/NaN count: {gathered_interval_inf_or_nan_count}")
 
-    def _log_evaluation_results(
-        self, evaluation_results: Dict[str, Any], batch_step: int
-    ):
+    def _log_evaluation_results(self, evaluation_results: Dict[str, Any], batch_step: int):
         """Log model evaluation metrics to experiment tracking system and console."""
         self.log(f"Step {batch_step} -- 📊 Evaluation Results")
         for i, (metric, result) in enumerate(evaluation_results.items()):
@@ -689,9 +651,7 @@ class Trainer:
 
         # Log to Pico Reporter if enabled
         if self.pico_reporter is not None:
-            self.pico_reporter.log_evaluation_metrics(
-                evaluation_results, step=batch_step
-            )
+            self.pico_reporter.log_evaluation_metrics(evaluation_results, step=batch_step)
 
     def _log_training_configuration(self):
         """
@@ -703,14 +663,10 @@ class Trainer:
         """
 
         total_params = sum(p.numel() for p in self.model.parameters())
-        trainable_params = sum(
-            p.numel() for p in self.model.parameters() if p.requires_grad
-        )
+        trainable_params = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
         global_batch_size = self.configs["data"].dataloader.batch_size
         per_device_batch_size = self.train_dataloader.batch_size
-        gradient_accumulation_steps = self.configs[
-            "training"
-        ].optimization.gradient_accumulation_steps
+        gradient_accumulation_steps = self.configs["training"].optimization.gradient_accumulation_steps
 
         device_type = ""
         fabric_device = str(self.fabric.device)
@@ -754,9 +710,7 @@ class Trainer:
         self.log("Software Setup:")
         self.log(f"└─ Python Version: {platform.python_version()}")
         self.log(f"└─ PyTorch Version: {torch.__version__}")
-        self.log(
-            f"└─ CUDA Version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}"
-        )
+        self.log(f"└─ CUDA Version: {torch.version.cuda if torch.cuda.is_available() else 'N/A'}")
         self.log(f"└─ Operating System: {platform.system()} {platform.release()}")
 
         self.log("Batch Size Configuration:")

@@ -29,8 +29,8 @@ from typing import TYPE_CHECKING, Any, Dict, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 from torch.nn.attention import SDPBackend, sdpa_kernel
+import torch.nn.functional as F
 from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import CausalLMOutput, CausalLMOutputWithPast
 
@@ -119,9 +119,7 @@ class RoPE(nn.Module):
 
         # only gets set once, and then reused for all RoPE instances
         if RoPE._freqs_cis_tensor is None:
-            RoPE._freqs_cis_tensor = self._setup_freqs_cis(
-                max_seq_len, self.theta, self.dim
-            )
+            RoPE._freqs_cis_tensor = self._setup_freqs_cis(max_seq_len, self.theta, self.dim)
 
         # register _freqs_cis buffer
         # can be easily recomputed so persistent=False
@@ -143,9 +141,7 @@ class RoPE(nn.Module):
         freqs = torch.outer(positions, _freqs)
         return torch.polar(torch.ones_like(freqs), freqs)  # complex64
 
-    def get_freqs_cis(
-        self, input_shape: torch.Size, start_pos: int, end_pos: int
-    ) -> torch.Tensor:
+    def get_freqs_cis(self, input_shape: torch.Size, start_pos: int, end_pos: int) -> torch.Tensor:
         """Reshape Frequency Tensor for RoPE Embeddings
 
         Makes the frequency tensor broadcastable with the input tensor.
@@ -171,14 +167,10 @@ class RoPE(nn.Module):
 
         NOTE: The start_pos is used if we want to use the kv_cache in the attention mechanism.
         """
-        queries_ = torch.view_as_complex(
-            queries.float().reshape(*queries.shape[:-1], -1, 2)
-        )
+        queries_ = torch.view_as_complex(queries.float().reshape(*queries.shape[:-1], -1, 2))
         keys_ = torch.view_as_complex(keys.float().reshape(*keys.shape[:-1], -1, 2))
 
-        input_shape = (
-            queries_.shape
-        )  # same as keys: (batch_size, seq_len, n_heads, head_dim/2)
+        input_shape = queries_.shape  # same as keys: (batch_size, seq_len, n_heads, head_dim/2)
         freqs_start_pos = start_pos
         freqs_end_pos = freqs_start_pos + queries_.shape[1]
 
@@ -433,13 +425,9 @@ class PicoDecoder(nn.Module):
         self.config = model_config
 
         self.embedding_proj = nn.Embedding(self.config.vocab_size, self.config.d_model)
-        self.layers = nn.ModuleList(
-            [PicoDecoderBlock(self.config) for _ in range(self.config.n_layers)]
-        )
+        self.layers = nn.ModuleList([PicoDecoderBlock(self.config) for _ in range(self.config.n_layers)])
         self.output_norm = RMSNorm(self.config)
-        self.de_embedding_proj = nn.Linear(
-            self.config.d_model, self.config.vocab_size, bias=False
-        )
+        self.de_embedding_proj = nn.Linear(self.config.d_model, self.config.vocab_size, bias=False)
 
     def convert_to_hf_model(self) -> "PicoDecoderHF":
         """Convert the Lightning model to a HuggingFace model."""
@@ -502,13 +490,9 @@ class PicoDecoder(nn.Module):
 
         # Process through transformer blocks
         for idx, layer in enumerate(self.layers):
-            layer_past_key_values = (
-                past_key_values[idx] if past_key_values is not None else None
-            )
+            layer_past_key_values = past_key_values[idx] if past_key_values is not None else None
 
-            h, layer_cached_key_values = layer(
-                h, mask=mask, past_key_values=layer_past_key_values, use_cache=use_cache
-            )
+            h, layer_cached_key_values = layer(h, mask=mask, past_key_values=layer_past_key_values, use_cache=use_cache)
 
             if use_cache:
                 cached_key_values += (layer_cached_key_values,)
@@ -542,9 +526,7 @@ class PicoDecoderHFConfig(PretrainedConfig):
         pico_config = cls(**config_dict)
 
         return_unused_kwargs = kwargs.pop("return_unused_kwargs", False)
-        unused_kwargs = {
-            key: value for key, value in kwargs.items() if not hasattr(pico_config, key)
-        }
+        unused_kwargs = {key: value for key, value in kwargs.items() if not hasattr(pico_config, key)}
 
         if return_unused_kwargs:
             return pico_config, unused_kwargs
@@ -588,9 +570,7 @@ class PicoDecoderHF(PreTrainedModel):
         Forwards pass for the HuggingFace version of the Pico Model. Basic wrapper around the
         Pico model's forward pass, and returns the output as a HuggingFace CausalLMOutput.
         """
-        logits, past_key_values = self.pico_decoder(
-            input_ids, past_key_values, use_cache
-        )
+        logits, past_key_values = self.pico_decoder(input_ids, past_key_values, use_cache)
         if use_cache:
             return CausalLMOutputWithPast(
                 logits=logits,

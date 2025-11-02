@@ -1,0 +1,62 @@
+# Demo config file with Pico Labs integration enabled
+# 
+# Pico Labs is a platform to easily run and share experiments on the web.
+# This example shows how to set up Pico Labs alongside W&B for comprehensive experiment tracking.
+# Your metrics will be synced to your private dashboard at labs.picolm.io
+#
+# Requires PICO_API_KEY and PICO_LAB_HASH environment variables to be set
+
+data:
+  dataloader:
+    batch_size: 32
+  
+checkpointing:
+  run_name: "demo with pico report"
+  save_every_n_steps: 50
+
+  save_to_hf: false
+  # hf_checkpoint:
+  #   repo_id: "pico-lm/demo"
+
+  learning_dynamics:
+    batch_size: 16
+
+model:
+    d_model: 96
+    activation_hidden_dim: 384
+
+evaluation: 
+  paloma:
+    batch_size: 32
+
+monitoring:
+
+  # W&B logging (optional)
+  save_to_wandb: false
+  # wandb:
+  #   project: "pico-demo"
+  #   entity: "pico-lm"
+
+  # Pico Labs - A platform to easily run and share experiments on the web
+  # Tracks metrics, evaluation results, and checkpoints to your dashboard at  
+  # Requires: PICO_API_KEY and PICO_LAB_HASH environment variables
+  save_to_picolabs: true
+  pico_report:
+    lab_hash: ""  # Can be set here or via PICO_LAB_HASH environment variable
+    auto_commit: true # Automatically commits your code to the platform
+
+  logging:
+    log_every_n_steps: 10
+
+training:
+  max_steps: 100
+
+  optimization:
+    lr: 0.001
+    lr_warmup_steps: 30
+
+    gradient_accumulation_steps: 2
+  
+  fabric:
+    num_devices: 1
+

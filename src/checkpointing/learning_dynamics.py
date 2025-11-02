@@ -8,16 +8,16 @@ import os
 import re
 from typing import Dict, Optional
 
-import deepspeed
-import torch
-import torch.nn as nn
-import torch.optim as optim
 from datasets import Dataset
+import deepspeed
 from huggingface_hub import upload_folder
 from lightning.fabric import Fabric
 from lightning.fabric.strategies import DeepSpeedStrategy
 from lightning.fabric.utilities.rank_zero import rank_zero_only
+import torch
+import torch.nn as nn
 from torch.nn import functional as F
+import torch.optim as optim
 from torch.utils.data import DataLoader
 from transformers import PreTrainedTokenizerBase
 
@@ -86,9 +86,7 @@ class CheckpointStateExtractor:
             if compute_gradients:
                 if "labels" in sub_batch:
                     input_ids = _input_ids
-                    labels = torch.tensor(
-                        sub_batch["labels"], device=self.fabric.device
-                    )
+                    labels = torch.tensor(sub_batch["labels"], device=self.fabric.device)
                 else:
                     input_ids = _input_ids[:, :-1]
                     labels = _input_ids[:, 1:]
@@ -125,10 +123,7 @@ class CheckpointStateExtractor:
         if compute_gradients:
             for name, param in self.model.named_parameters():
                 # only do this for the weight matrix of the layer_suffixes
-                if (
-                    any(layer_suffix in name for layer_suffix in layer_suffixes)
-                    and "weight" in name
-                ):
+                if any(layer_suffix in name for layer_suffix in layer_suffixes) and "weight" in name:
                     if isinstance(self.fabric.strategy, DeepSpeedStrategy):
                         _grad = deepspeed.utils.safe_get_full_grad(param)
                     else:
@@ -171,16 +166,12 @@ class CheckpointStateExtractor:
         for name, module in self.model.named_modules():
             if any(layer_suffix in name for layer_suffix in layer_suffixes):
                 _forward_hook = module.register_forward_hook(
-                    self._get_forward_hook(
-                        name, checkpoint_activations, checkpoint_weights
-                    )
+                    self._get_forward_hook(name, checkpoint_activations, checkpoint_weights)
                 )
                 forward_hooks.append(_forward_hook)
         return forward_hooks
 
-    def _get_forward_hook(
-        self, module_name, checkpoint_activations, checkpoint_weights
-    ):
+    def _get_forward_hook(self, module_name, checkpoint_activations, checkpoint_weights):
         """Get a forward hook for a given module.
 
         This function is called by the _setup_forward_hooks function to setup a forward hook for a given
@@ -207,16 +198,12 @@ class CheckpointStateExtractor:
             # Reshape from [num_processes, batch_size, hidden_dim] to [total_batch_size, hidden_dim]
             # NOTE: transposing allows us to interleave the activations from each process so that
             # they are in the correct order. (i.e. activation N is from data sample N)
-            gathered_activations = gathered_activations.transpose(0, 1).reshape(
-                -1, gathered_activations.shape[-1]
-            )
+            gathered_activations = gathered_activations.transpose(0, 1).reshape(-1, gathered_activations.shape[-1])
 
             # check if there is already a key for the module name
             if module_name not in checkpoint_activations:
                 # if there is no key, then we create a new key and store the hidden states
-                checkpoint_activations[module_name] = (
-                    gathered_activations.detach().cpu()
-                )
+                checkpoint_activations[module_name] = gathered_activations.detach().cpu()
 
                 # extract the weight matrix just once
                 weight_matrix = module.weight.detach().cpu()
@@ -278,9 +265,7 @@ def compute_learning_dynamics_states(
         collate_fn=_collate_fn,
         drop_last=False,
     )
-    extractor_dataloader = fabric.setup_dataloaders(
-        extractor_dataloader, use_distributed_sampler=True
-    )
+    extractor_dataloader = fabric.setup_dataloaders(extractor_dataloader, use_distributed_sampler=True)
 
     # Create a new model instance with same parameters but zero gradients
     _model = initialize_model(model.config)
@@ -294,14 +279,10 @@ def compute_learning_dynamics_states(
     _model.zero_grad()
 
     # setup forward hooks for the model to save activations and weights at each layer
-    state_extractor = CheckpointStateExtractor(
-        checkpointing_config.learning_dynamics, fabric, _model
-    )
+    state_extractor = CheckpointStateExtractor(checkpointing_config.learning_dynamics, fabric, _model)
 
-    checkpoint_activations, checkpoint_weights, checkpoint_gradients = (
-        state_extractor.extract_states(
-            extractor_dataloader, compute_gradients=compute_gradients
-        )
+    checkpoint_activations, checkpoint_weights, checkpoint_gradients = state_extractor.extract_states(
+        extractor_dataloader, compute_gradients=compute_gradients
     )
 
     del _model
@@ -390,9 +371,7 @@ def save_learning_dynamics_states(
     # save the learning dynamics states
     for key, value in learning_dynamics_states.items():
         if value is not None and len(value) > 0:
-            torch.save(
-                value, os.path.join(learning_dynamics_path, f"{prefix}_{key}.pt")
-            )
+            torch.save(value, os.path.join(learning_dynamics_path, f"{prefix}_{key}.pt"))
 
     if learning_dynamics_dataset is not None:
         if tokenizer is not None:
@@ -407,9 +386,7 @@ def save_learning_dynamics_states(
 
             learning_dynamics_dataset = Dataset.from_dict(detokenized_dataset)
 
-        learning_dynamics_dataset_path = os.path.join(
-            learning_dynamics_path, f"{prefix}_data"
-        )
+        learning_dynamics_dataset_path = os.path.join(learning_dynamics_path, f"{prefix}_data")
         learning_dynamics_dataset.save_to_disk(learning_dynamics_dataset_path)
 
     if checkpointing_config.save_to_hf:

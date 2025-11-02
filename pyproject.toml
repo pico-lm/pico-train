@@ -32,6 +32,18 @@ pico-report = ["pico-report"]
 ipykernel = "^6.29.5"
 jupyter = "^1.1.1"
 
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]  # Error, pyflakes, isort (import sorting)
+ignore = ["E501"]  # Let ruff format handle line length
+
+[tool.ruff.lint.isort]
+known-first-party = ["src"]
+force-sort-within-sections = true
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

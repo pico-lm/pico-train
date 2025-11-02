@@ -4,10 +4,10 @@ Miscellaneous logging utilities.
 
 from io import StringIO
 
-import yaml
 from lightning.fabric.utilities.rank_zero import rank_zero_only
 from rich.console import Console
 from rich.panel import Panel
+import yaml
 
 
 @rank_zero_only
@@ -28,9 +28,7 @@ def pretty_print_yaml_config(logger, config: dict) -> None:
     console = Console(file=output, force_terminal=False)
 
     # Convert to YAML string first
-    yaml_str = yaml.dump(
-        config, default_flow_style=False, sort_keys=False, Dumper=yaml.SafeDumper
-    )
+    yaml_str = yaml.dump(config, default_flow_style=False, sort_keys=False, Dumper=yaml.SafeDumper)
 
     # Create formatted panel
     panel = Panel(

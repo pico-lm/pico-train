@@ -43,15 +43,11 @@ def save_evaluation_results(
     """
 
     run_dir = os.path.join(checkpointing_config.runs_dir, checkpointing_config.run_name)
-    eval_results_dir = os.path.join(
-        run_dir, checkpointing_config.evaluation.eval_results_dir
-    )
+    eval_results_dir = os.path.join(run_dir, checkpointing_config.evaluation.eval_results_dir)
 
     os.makedirs(eval_results_dir, exist_ok=True)
 
-    curr_eval_results_path = os.path.join(
-        eval_results_dir, f"step_{checkpoint_step}.json"
-    )
+    curr_eval_results_path = os.path.join(eval_results_dir, f"step_{checkpoint_step}.json")
 
     # save out as json
     with open(curr_eval_results_path, "w") as f:

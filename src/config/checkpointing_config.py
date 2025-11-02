@@ -82,16 +82,8 @@ class CheckpointingConfig:
 
     # Whether to save checkpoints to HuggingFace
     save_to_hf: Optional[bool] = False
-    hf_checkpoint: HuggingFaceCheckpointingConfig = field(
-        default_factory=HuggingFaceCheckpointingConfig
-    )
+    hf_checkpoint: HuggingFaceCheckpointingConfig = field(default_factory=HuggingFaceCheckpointingConfig)
 
-    training: TrainingCheckpointingConfig = field(
-        default_factory=TrainingCheckpointingConfig
-    )
-    evaluation: EvaluationCheckpointingConfig = field(
-        default_factory=EvaluationCheckpointingConfig
-    )
-    learning_dynamics: LearningDynamicsCheckpointingConfig = field(
-        default_factory=LearningDynamicsCheckpointingConfig
-    )
+    training: TrainingCheckpointingConfig = field(default_factory=TrainingCheckpointingConfig)
+    evaluation: EvaluationCheckpointingConfig = field(default_factory=EvaluationCheckpointingConfig)
+    learning_dynamics: LearningDynamicsCheckpointingConfig = field(default_factory=LearningDynamicsCheckpointingConfig)
