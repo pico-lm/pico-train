@@ -556,7 +556,7 @@ def initialize_pico_reporter(monitoring_config: MonitoringConfig, checkpointing_
 
     Pico Labs is a platform to easily run and share experiments on the web.
     This function initializes the Pico Reporter client for tracking training metrics,
-    evaluation results, and checkpoint data to your private dashboard at picolabs.space.
+    evaluation results, and checkpoint data to your private dashboard at labs.picolm.io.
 
     It uses environment variables for API key and base URL:
     - PICO_API_KEY (required)
@@ -591,7 +591,10 @@ def initialize_pico_reporter(monitoring_config: MonitoringConfig, checkpointing_
         lab_hash is not None and lab_hash != ""
     ), "Lab hash must be provided via config (pico_report.lab_hash) or PICO_LAB_HASH environment variable."
 
-    experiment_name = checkpointing_config.run_name
+    # If no experiment name is specified, use the run name
+    experiment_name = monitoring_config.pico_report.experiment_name
+    if not experiment_name:
+        experiment_name = checkpointing_config.run_name
 
     # Get auto_commit setting from config
     auto_commit = monitoring_config.pico_report.auto_commit

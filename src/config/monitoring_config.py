@@ -5,6 +5,7 @@ Specifies the monitoring process, e.g. how to log metrics and keep track of trai
 """
 
 from dataclasses import dataclass, field
+from typing import Optional
 
 
 @dataclass
@@ -22,10 +23,14 @@ class WandbConfig:
 
 @dataclass
 class PicoReportConfig:
-    # Configure logging to Pico Report
-    # Note: Requires PICO_API_KEY and PICO_LAB_HASH environment variables to be set
-    # Optional: PICO_BASE_URL (defaults to https://picolabs.space/api)
-    lab_hash: str = ""
+    """
+    Configuration for Pico Report integration.
+
+    Note: Requires PICO_API_KEY and PICO_LAB_HASH environment variables to be set.
+    """
+
+    lab_hash: Optional[str] = None
+    experiment_name: Optional[str] = None
 
     # Git tracking: automatically create git commits for each experiment
     # This captures the exact code state and links it to your experiment in the dashboard
