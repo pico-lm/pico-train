@@ -159,11 +159,22 @@ Pico is open-source under the [Apache License 2.0](LICENSE).
 If you use **Pico** in your research, please cite:
 
 ```bibtex
-@software{pico2025,
-    author = {Diehl Martinez, Richard},
-    title = {Pico: A Lightweight Framework for Studying Language Model Learning Dynamics},
-    year = {2025},
-    url = {https://github.com/pico-lm}
+@inproceedings{diehl-martinez-etal-2025-pico,
+    title = "Pico: A Modular Framework for Hypothesis-Driven Small Language Model Research",
+    author = "Diehl Martinez, Richard  and
+      Africa, David Demitri  and
+      Weiss, Yuval  and
+      Salhan, Suchir  and
+      Daniels, Ryan  and
+      Buttery, Paula",
+    editor = {Habernal, Ivan  and
+      Schulam, Peter  and
+      Tiedemann, J{\"o}rg},
+    booktitle = "Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: System Demonstrations",
+    month = nov,
+    year = "2025",
+    address = "Suzhou, China",
+    publisher = "Association for Computational Linguistics",
 }
 ```
 
